@@ -1,0 +1,461 @@
+================================================================================
+  AI PROJECT MANAGER — INSTALLATION & SETUP GUIDE
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────
+  1. Prerequisites
+  2. Install Python 3.12
+  3. Install Node.js 20
+  4. Install Git
+  5. Install Docker (Optional)
+  6. Install Azure CLI (Optional, for deployment)
+  7. Clone the Repository
+  8. Backend Setup
+  9. Frontend Setup
+ 10. API Keys & Environment Variables
+ 11. Running the Project
+ 12. Docker Setup (Alternative)
+ 13. Git & GitHub Command Guide
+ 14. Troubleshooting
+
+================================================================================
+1. PREREQUISITES
+================================================================================
+
+  Operating System : Windows 10/11, macOS, or Linux
+  RAM              : 8 GB minimum
+  Disk Space       : ~2 GB for all tools + dependencies
+  Internet         : Required for API calls and package installs
+
+  Tools needed:
+    ✓ Python 3.12+
+    ✓ Node.js 20+
+    ✓ Git
+    ✓ Docker Desktop (optional, for containerized setup)
+    ✓ Azure CLI (optional, for cloud deployment)
+
+================================================================================
+2. INSTALL PYTHON 3.12
+================================================================================
+
+  WINDOWS:
+    1. Download from https://www.python.org/downloads/
+    2. Run installer → CHECK "Add Python to PATH" ← IMPORTANT
+    3. Click "Install Now"
+    4. Verify:
+         python --version        # Should show Python 3.12.x
+         pip --version            # Should show pip 24.x
+
+  macOS:
+    brew install python@3.12
+    python3 --version
+
+  Linux (Ubuntu/Debian):
+    sudo apt update
+    sudo apt install python3.12 python3.12-venv python3-pip
+    python3.12 --version
+
+================================================================================
+3. INSTALL NODE.JS 20
+================================================================================
+
+  WINDOWS:
+    1. Download LTS from https://nodejs.org/
+    2. Run installer (keep defaults, includes npm)
+    3. Verify:
+         node --version          # Should show v20.x.x
+         npm --version           # Should show 10.x.x
+
+  macOS:
+    brew install node@20
+
+  Linux (Ubuntu/Debian):
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt install -y nodejs
+    node --version
+
+================================================================================
+4. INSTALL GIT
+================================================================================
+
+  WINDOWS:
+    1. Download from https://git-scm.com/download/win
+    2. Run installer → keep defaults
+    3. Verify:
+         git --version           # Should show git version 2.x.x
+
+  macOS:
+    brew install git
+
+  Linux:
+    sudo apt install git
+
+  FIRST-TIME CONFIGURATION (all platforms):
+    git config --global user.name "Your Name"
+    git config --global user.email "your-email@example.com"
+
+================================================================================
+5. INSTALL DOCKER (Optional — for containerized setup)
+================================================================================
+
+  WINDOWS / macOS:
+    1. Download Docker Desktop from https://www.docker.com/products/docker-desktop
+    2. Install and restart your machine
+    3. Verify:
+         docker --version        # Should show Docker 27.x
+         docker-compose --version
+
+  Linux:
+    sudo apt install docker.io docker-compose
+    sudo systemctl start docker
+    sudo usermod -aG docker $USER
+    # Log out and back in, then:
+    docker --version
+
+================================================================================
+6. INSTALL AZURE CLI (Optional — for cloud deployment)
+================================================================================
+
+  WINDOWS:
+    winget install Microsoft.AzureCLI
+    # OR download from https://aka.ms/installazurecliwindows
+
+  macOS:
+    brew install azure-cli
+
+  Linux:
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+  Verify:
+    az --version
+    az login                     # Opens browser for authentication
+
+================================================================================
+7. CLONE THE REPOSITORY
+================================================================================
+
+  # Clone the repo
+  git clone https://github.com/YOUR-ORG/Jira-sick-park.git
+  cd Jira-sick-park
+
+  # If you already have it, pull latest
+  cd Jira-sick-park
+  git pull origin main
+
+================================================================================
+8. BACKEND SETUP
+================================================================================
+
+  Step 1 — Navigate to backend folder:
+    cd backend
+
+  Step 2 — Create a virtual environment:
+    python -m venv venv
+
+  Step 3 — Activate the virtual environment:
+    Windows (PowerShell):   .\venv\Scripts\Activate
+    Windows (CMD):          venv\Scripts\activate.bat
+    macOS / Linux:          source venv/bin/activate
+
+  Step 4 — Install Python dependencies:
+    pip install -r requirements.txt
+
+  This installs:
+    ┌─────────────────────┬──────────────────────────────────────┐
+    │ Package             │ Purpose                              │
+    ├─────────────────────┼──────────────────────────────────────┤
+    │ fastapi 0.115.0     │ Web framework (API server)           │
+    │ uvicorn 0.30.0      │ ASGI server to run FastAPI           │
+    │ pydantic 2.9.0      │ Data validation & schemas            │
+    │ pydantic-settings    │ Environment variable management      │
+    │ httpx 0.27.0        │ Async HTTP client (Jira/GitHub/Slack)│
+    │ langchain 0.3.0     │ LLM framework                       │
+    │ langchain-openai     │ OpenAI integration for LangChain     │
+    │ langgraph 0.2.0     │ Multi-agent orchestration (DAG)      │
+    │ python-dotenv        │ Load .env files                      │
+    └─────────────────────┴──────────────────────────────────────┘
+
+  Step 5 — Go back to project root:
+    cd ..
+
+================================================================================
+9. FRONTEND SETUP
+================================================================================
+
+  Step 1 — Navigate to frontend folder:
+    cd frontend
+
+  Step 2 — Install Node.js dependencies:
+    npm install
+
+  This installs:
+    ┌──────────────────────────┬─────────────────────────────────┐
+    │ Package                  │ Purpose                         │
+    ├──────────────────────────┼─────────────────────────────────┤
+    │ react 18.3.1             │ UI library                      │
+    │ react-dom 18.3.1         │ React DOM renderer              │
+    │ axios 1.7.0              │ HTTP client for API calls       │
+    │ vite 5.4.0               │ Build tool & dev server         │
+    │ @vitejs/plugin-react     │ React support for Vite          │
+    └──────────────────────────┴─────────────────────────────────┘
+
+  Step 3 — Go back to project root:
+    cd ..
+
+================================================================================
+10. API KEYS & ENVIRONMENT VARIABLES
+================================================================================
+
+  Step 1 — Copy the example env file:
+    cp .env.example .env            # macOS/Linux
+    copy .env.example .env          # Windows CMD
+    Copy-Item .env.example .env     # Windows PowerShell
+
+  Step 2 — Edit .env and fill in your keys:
+
+    ┌─────────────────────┬───────────────────────────────────────────────┐
+    │ Variable            │ How to get it                                 │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ OPENAI_API_KEY      │ https://platform.openai.com/api-keys         │
+    │                     │ → Create new secret key                      │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ JIRA_URL            │ Your Atlassian URL, e.g.                     │
+    │                     │ https://your-team.atlassian.net               │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ JIRA_EMAIL          │ Your Atlassian account email                  │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ JIRA_API_TOKEN      │ https://id.atlassian.com/manage-profile/     │
+    │                     │   security/api-tokens                        │
+    │                     │ → Create API token                           │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ GITHUB_TOKEN        │ https://github.com/settings/tokens           │
+    │                     │ → Generate new token (classic)               │
+    │                     │ → Scopes: repo, read:org                     │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ SLACK_BOT_TOKEN     │ https://api.slack.com/apps                   │
+    │                     │ → Create app → OAuth & Permissions           │
+    │                     │ → Scopes: channels:history, chat:write       │
+    │                     │ → Install to workspace → copy Bot Token      │
+    ├─────────────────────┼───────────────────────────────────────────────┤
+    │ LANGCHAIN_API_KEY   │ https://smith.langchain.com/settings         │
+    │                     │ → API Keys → Create API Key                  │
+    └─────────────────────┴───────────────────────────────────────────────┘
+
+  NOTE: SLACK_BOT_TOKEN and LANGCHAIN_API_KEY are optional.
+        The app works without them (Slack context & tracing are skipped).
+
+================================================================================
+11. RUNNING THE PROJECT
+================================================================================
+
+  You need TWO terminals — one for backend, one for frontend.
+
+  TERMINAL 1 — Backend:
+    cd backend
+    .\venv\Scripts\Activate           # Windows
+    uvicorn app.main:app --reload
+
+    ✓ Backend runs at:  http://localhost:8000
+    ✓ API docs at:      http://localhost:8000/docs
+    ✓ Health check:     http://localhost:8000/api/project/health
+
+  TERMINAL 2 — Frontend:
+    cd frontend
+    npm run dev
+
+    ✓ Frontend runs at: http://localhost:5173
+    ✓ API calls proxy to backend automatically (configured in vite.config.js)
+
+  USING THE APP:
+    1. Open http://localhost:5173 in your browser
+    2. Enter your Jira project key (e.g., "PROJ")
+    3. Optionally fill in Sprint ID, GitHub repo (owner/repo), Slack channel
+    4. Click "Run Project Analysis"
+    5. View the unified health report with scores from all 5 agents
+
+================================================================================
+12. DOCKER SETUP (Alternative — runs everything in containers)
+================================================================================
+
+  # From the project root
+  cd infrastructure
+  docker-compose up --build
+
+  This starts:
+    - Backend  on http://localhost:8000
+    - Frontend on http://localhost:5173
+
+  To stop:
+    docker-compose down
+
+  To rebuild after code changes:
+    docker-compose up --build
+
+================================================================================
+13. GIT & GITHUB COMMAND GUIDE
+================================================================================
+
+  ── INITIAL SETUP ──────────────────────────────────────────────────────────────
+
+  # Configure your identity (one-time)
+  git config --global user.name "Your Name"
+  git config --global user.email "your-email@example.com"
+
+  # Clone the repository
+  git clone https://github.com/YOUR-ORG/Jira-sick-park.git
+  cd Jira-sick-park
+
+  ── DAILY WORKFLOW ─────────────────────────────────────────────────────────────
+
+  # Check current status
+  git status
+
+  # Pull latest changes from main
+  git pull origin main
+
+  # Create a new feature branch
+  git checkout -b feature/your-feature-name
+
+  # Stage your changes
+  git add .                           # Stage all changes
+  git add backend/app/agents/         # Stage specific folder
+  git add frontend/src/App.jsx        # Stage specific file
+
+  # Commit with a message
+  git commit -m "feat: add sprint velocity chart"
+
+  # Push your branch to GitHub
+  git push origin feature/your-feature-name
+
+  ── BRANCHING ──────────────────────────────────────────────────────────────────
+
+  # List all branches
+  git branch -a
+
+  # Switch to an existing branch
+  git checkout main
+  git checkout feature/some-branch
+
+  # Delete a local branch (after merge)
+  git branch -d feature/old-branch
+
+  # Update your branch with latest main
+  git checkout feature/your-branch
+  git merge main
+  # OR rebase (cleaner history):
+  git rebase main
+
+  ── PULL REQUESTS (on GitHub) ──────────────────────────────────────────────────
+
+  1. Push your branch:
+       git push origin feature/your-feature-name
+
+  2. Go to: https://github.com/YOUR-ORG/Jira-sick-park
+
+  3. Click "Compare & pull request" (yellow banner)
+
+  4. Fill in:
+       Title:       feat: add sprint velocity chart
+       Description: What changed and why
+       Reviewers:   Assign team members
+
+  5. Click "Create pull request"
+
+  6. After approval, click "Merge pull request" → "Confirm merge"
+
+  7. Delete the branch on GitHub (cleanup)
+
+  8. Locally:
+       git checkout main
+       git pull origin main
+       git branch -d feature/your-feature-name
+
+  ── COMMIT MESSAGE CONVENTIONS ─────────────────────────────────────────────────
+
+  Use prefixes for clarity:
+
+    feat:     New feature              git commit -m "feat: add risk severity badges"
+    fix:      Bug fix                  git commit -m "fix: handle empty Jira response"
+    docs:     Documentation            git commit -m "docs: update README setup steps"
+    style:    Formatting (no logic)    git commit -m "style: fix card spacing"
+    refactor: Code restructure         git commit -m "refactor: extract LLM config"
+    test:     Add/update tests         git commit -m "test: add sprint agent tests"
+    chore:    Tooling/config           git commit -m "chore: update requirements.txt"
+
+  ── UNDOING CHANGES ────────────────────────────────────────────────────────────
+
+  # Discard changes in a file (before staging)
+  git checkout -- backend/app/main.py
+
+  # Unstage a file (after git add, before commit)
+  git reset HEAD backend/app/main.py
+
+  # Undo the last commit (keep changes)
+  git reset --soft HEAD~1
+
+  # View commit history
+  git log --oneline -10
+
+  ── USEFUL COMMANDS ────────────────────────────────────────────────────────────
+
+  # See what changed
+  git diff                            # Unstaged changes
+  git diff --staged                   # Staged changes
+
+  # Stash work temporarily
+  git stash                           # Save work-in-progress
+  git stash pop                       # Restore stashed work
+
+  # Check remote URL
+  git remote -v
+
+  # View file history
+  git log --oneline backend/app/orchestrator/workflow.py
+
+  ── .GITIGNORE (already included) ──────────────────────────────────────────────
+
+  Make sure these are never committed:
+    .env                 ← API keys / secrets
+    venv/                ← Python virtual environment
+    node_modules/        ← Node.js dependencies
+    __pycache__/         ← Python cache
+    dist/                ← Frontend build output
+
+================================================================================
+14. TROUBLESHOOTING
+================================================================================
+
+  PROBLEM: "python" not recognized
+  FIX:     Use "python3" instead, or re-install Python with "Add to PATH" checked
+
+  PROBLEM: pip install fails with permission error
+  FIX:     Make sure your virtual environment is activated (Step 8.3)
+
+  PROBLEM: "npm: command not found"
+  FIX:     Reinstall Node.js from https://nodejs.org/
+
+  PROBLEM: Backend starts but frontend can't reach API
+  FIX:     Ensure backend is on port 8000, check vite.config.js proxy
+
+  PROBLEM: "OPENAI_API_KEY not set" error
+  FIX:     Copy .env.example → .env and fill in your keys (Step 10)
+
+  PROBLEM: Jira API returns 401 Unauthorized
+  FIX:     Verify JIRA_URL, JIRA_EMAIL, and JIRA_API_TOKEN in .env
+           Token: https://id.atlassian.com/manage-profile/security/api-tokens
+
+  PROBLEM: Docker build fails
+  FIX:     Make sure Docker Desktop is running, then retry:
+           docker-compose down
+           docker-compose up --build
+
+  PROBLEM: Port already in use
+  FIX:     Kill the process on that port:
+           Windows:  netstat -ano | findstr :8000
+                     taskkill /PID <PID> /F
+           macOS:    lsof -i :8000 | kill -9 <PID>
+
+================================================================================
+  END OF GUIDE
+================================================================================
