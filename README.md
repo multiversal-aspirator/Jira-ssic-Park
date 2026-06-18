@@ -167,5 +167,3 @@ Response: `ProjectHealthReport` with health score (0-100), sprint analysis, risk
 - LangGraph fan-out edges run sequentially in the current LangGraph version; true async parallelism depends on the runtime.
 - Meeting notes ingestion is file-based (markdown files in `meeting_notes/`); no transcription pipeline included.
 =======
-Hi
->>>>>>> 177951ebcc119b9d1888e8dfebb843df5a93cc71
