@@ -21,3 +21,43 @@ async def analyze_project(request: ProjectUpdateRequest):
 @router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "ai-project-manager"}
+
+
+@router.get("/health-report")
+async def health_report():
+    return {
+        "project_name": "AI Project Manager",
+        "sprint": "Sprint 21",
+        "health_score": 78,
+        "status": "At Risk",
+        "summary": "Sprint is progressing, but backend dependencies and unresolved blockers may delay delivery.",
+        "agents": {
+            "sprint_analysis_agent": {
+                "progress": "72%",
+                "completed_tasks": 18,
+                "total_tasks": 25
+            },
+            "risk_detection_agent": {
+                "risk_level": "Medium",
+                "risks": [
+                    "Authentication API delayed",
+                    "Two high-priority bugs still open"
+                ]
+            },
+            "dependency_tracking_agent": {
+                "blockers": [
+                    "Frontend waiting for backend auth endpoint",
+                    "QA waiting for stable deployment"
+                ]
+            },
+            "delivery_forecasting_agent": {
+                "completion_likelihood": "68%",
+                "forecast": "Sprint may slip by 2 days"
+            }
+        },
+        "recommendations": [
+            "Assign one more backend developer to authentication API",
+            "Prioritize bug fixes before adding new stories",
+            "Run daily blocker review until sprint closure"
+        ]
+    }

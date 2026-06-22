@@ -105,3 +105,4 @@ class ProjectHealthReport(BaseModel):
     delivery_forecast: Optional[DeliveryForecast] = None
     generated_at: datetime = Field(default_factory=datetime.utcnow)
     evidence_summary: list[str] = Field(default_factory=list)
+    agent_trace: list[str] = Field(default_factory=list, description="Execution trace of agent workflow steps")
