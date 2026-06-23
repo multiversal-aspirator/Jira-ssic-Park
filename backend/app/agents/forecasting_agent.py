@@ -50,7 +50,6 @@ async def run_forecasting_agent(
     llm = ChatOpenAI(
         model=settings.LLM_MODEL,
         temperature=settings.LLM_TEMPERATURE,
-        api_key=settings.OPENAI_API_KEY,
     )
 
     chain = FORECASTING_PROMPT | llm

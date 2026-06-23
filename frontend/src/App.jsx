@@ -14,7 +14,7 @@ export default function App() {
     project_key: '',
     sprint_id: '',
     github_repo: '',
-    slack_channel: '',
+    teams_channel: '',
   });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function App() {
         project_key: form.project_key,
         sprint_id: form.sprint_id || null,
         github_repo: form.github_repo || null,
-        slack_channel: form.slack_channel || null,
+        teams_channel: form.teams_channel || null,
         include_forecasting: true,
       };
       const { data } = await axios.post(`${API_BASE}/analyze`, payload);
@@ -90,11 +90,11 @@ export default function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="slack_channel">Slack Channel</label>
+            <label htmlFor="teams_channel">Teams Channel</label>
             <input
-              id="slack_channel"
-              name="slack_channel"
-              value={form.slack_channel}
+              id="teams_channel"
+              name="teams_channel"
+              value={form.teams_channel}
               onChange={handleChange}
               placeholder="channel-id"
             />

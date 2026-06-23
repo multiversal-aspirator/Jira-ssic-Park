@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     # LLM
     OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str | None = None
     LLM_MODEL: str = "gpt-4o"
     LLM_TEMPERATURE: float = 0.2
 
@@ -20,8 +21,9 @@ class Settings(BaseSettings):
     # GitHub
     GITHUB_TOKEN: str = ""
 
-    # Slack
-    SLACK_BOT_TOKEN: str = ""
+    # Microsoft Teams (Graph API)
+    TEAMS_ACCESS_TOKEN: str = ""
+    TEAMS_TEAM_ID: str = ""
 
     # LangSmith Observability
     LANGCHAIN_TRACING_V2: bool = True

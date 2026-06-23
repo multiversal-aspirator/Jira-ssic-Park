@@ -37,7 +37,6 @@ async def run_reporting_agent(
     llm = ChatOpenAI(
         model=settings.LLM_MODEL,
         temperature=settings.LLM_TEMPERATURE,
-        api_key=settings.OPENAI_API_KEY,
     )
 
     chain = REPORTING_PROMPT | llm

@@ -46,7 +46,6 @@ async def run_sprint_agent(project_key: str, sprint_id: str | None = None) -> Sp
     llm = ChatOpenAI(
         model=settings.LLM_MODEL,
         temperature=settings.LLM_TEMPERATURE,
-        api_key=settings.OPENAI_API_KEY,
     )
 
     chain = SPRINT_PROMPT | llm

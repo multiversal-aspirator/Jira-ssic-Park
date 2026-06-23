@@ -24,7 +24,7 @@ class ProjectUpdateRequest(BaseModel):
     project_key: str = Field(..., description="Jira project key or identifier")
     sprint_id: Optional[str] = Field(None, description="Specific sprint to analyze")
     github_repo: Optional[str] = Field(None, description="GitHub repo in owner/repo format")
-    slack_channel: Optional[str] = Field(None, description="Slack channel for context")
+    teams_channel: Optional[str] = Field(None, description="Microsoft Teams channel for context")
     include_forecasting: bool = Field(True, description="Whether to run delivery forecasting")
 
 

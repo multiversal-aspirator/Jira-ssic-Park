@@ -54,7 +54,7 @@ async def detect_risks(state: ProjectState) -> dict:
     req = state["request"]
     logger.info("[Orchestrator] Running Risk Detection Agent")
     try:
-        result = await run_risk_agent(req.project_key, req.github_repo, req.slack_channel)
+        result = await run_risk_agent(req.project_key, req.github_repo, req.teams_channel)
     except Exception as e:
         logger.error(f"[Orchestrator] Risk agent failed: {e}")
         result = None
