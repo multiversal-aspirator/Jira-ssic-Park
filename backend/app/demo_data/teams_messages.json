@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2026-06-16T09:15:00Z",
+    "user": "Bob Martinez",
+    "channel": "dev-payments",
+    "text": "Still hitting 503 from the payment provider SDK. Opened a support ticket but no ETA yet. This is blocking DEMO-102 and DEMO-110."
+  },
+  {
+    "timestamp": "2026-06-16T09:22:00Z",
+    "user": "Alice Chen",
+    "channel": "dev-backend",
+    "text": "The race condition fix is trickier than expected. Need to refactor the session store to use atomic operations. Might take another day."
+  },
+  {
+    "timestamp": "2026-06-15T14:30:00Z",
+    "user": "Eve Rodriguez",
+    "channel": "dev-qa",
+    "text": "Can't start load testing until the payment endpoint is stable. Currently blocked on Bob's PR #237."
+  },
+  {
+    "timestamp": "2026-06-15T11:00:00Z",
+    "user": "Dana Patel",
+    "channel": "dev-backend",
+    "text": "Rate limiter PR is up for review. No blockers on my end but waiting for someone to review PR #241."
+  },
+  {
+    "timestamp": "2026-06-14T16:45:00Z",
+    "user": "Charlie Kim",
+    "channel": "dev-infra",
+    "text": "Staging pipeline is green. But deployment to production is gated until payment integration is merged and tested."
+  },
+  {
+    "timestamp": "2026-06-14T10:00:00Z",
+    "user": "Bob Martinez",
+    "channel": "dev-payments",
+    "text": "PR #237 has merge conflicts after Alice's OAuth changes were merged. Need to rebase and fix the integration tests."
+  },
+  {
+    "timestamp": "2026-06-13T09:30:00Z",
+    "user": "Alice Chen",
+    "channel": "dev-backend",
+    "text": "Standup: OAuth is merged! Moving to the session race condition bug. Estimated 2-3 days."
+  },
+  {
+    "timestamp": "2026-06-12T15:00:00Z",
+    "user": "Eve Rodriguez",
+    "channel": "dev-qa",
+    "text": "Reminder: we have zero test coverage on the payment flow right now. Risk of regressions is high if we rush."
+  },
+  {
+    "timestamp": "2026-06-11T09:15:00Z",
+    "user": "Dana Patel",
+    "channel": "dev-backend",
+    "text": "Webhook processor is almost done. Should be merged today. Then starting rate limiting."
+  },
+  {
+    "timestamp": "2026-06-16T14:00:00Z",
+    "user": "Charlie Kim",
+    "channel": "dev-infra",
+    "text": "Sprint ends today and we still have 2 blocked items. Might need to carry over DEMO-106 and DEMO-110 to next sprint."
+  }
+]

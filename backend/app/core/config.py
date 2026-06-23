@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # LLM
+    LLM_PROVIDER: str = "openai"
     OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str | None = None
+    OPENAI_BASE_URL: str = ""
     LLM_MODEL: str = "gpt-4o"
     LLM_TEMPERATURE: float = 0.2
 
