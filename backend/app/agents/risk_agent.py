@@ -1,4 +1,5 @@
 import json
+from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from app.core.config import get_settings
 from app.services.jira_service import JiraService
@@ -96,6 +97,7 @@ def _build_demo_risk_analysis() -> RiskAnalysis:
     )
 
 
+@traceable(name="RiskAgent")
 async def run_risk_agent(
     project_key: str,
     github_repo: str | None = None,

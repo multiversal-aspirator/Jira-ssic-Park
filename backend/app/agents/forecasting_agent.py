@@ -1,4 +1,5 @@
 import json
+from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from app.core.config import get_settings
 from app.services.jira_service import JiraService
@@ -59,6 +60,7 @@ def _build_demo_delivery_forecast(sprint_analysis: SprintAnalysis | None = None)
     )
 
 
+@traceable(name="ForecastingAgent")
 async def run_forecasting_agent(
     project_key: str,
     sprint_analysis: SprintAnalysis | None = None,

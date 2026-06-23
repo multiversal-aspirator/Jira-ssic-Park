@@ -1,4 +1,5 @@
 import json
+from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from app.core.config import get_settings
 from app.services.llm_service import get_chat_model, parse_llm_json
@@ -82,6 +83,7 @@ def _build_demo_stakeholder_report(
     )
 
 
+@traceable(name="ReportingAgent")
 async def run_reporting_agent(
     sprint: SprintAnalysis | None = None,
     risks: RiskAnalysis | None = None,

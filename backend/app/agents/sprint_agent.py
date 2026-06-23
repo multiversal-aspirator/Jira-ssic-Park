@@ -1,4 +1,5 @@
 import json
+from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from app.core.config import get_settings
 from app.services.jira_service import JiraService
@@ -71,6 +72,7 @@ def _build_demo_sprint_analysis() -> SprintAnalysis:
     )
 
 
+@traceable(name="SprintAgent")
 async def run_sprint_agent(project_key: str, sprint_id: str | None = None) -> SprintAnalysis:
     logger.info(f"[SprintAgent] Analyzing sprint for project {project_key}")
 

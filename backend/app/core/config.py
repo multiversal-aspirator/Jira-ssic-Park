@@ -27,9 +27,10 @@ class Settings(BaseSettings):
     TEAMS_TEAM_ID: str = ""
 
     # LangSmith Observability
-    LANGCHAIN_TRACING_V2: bool = True
-    LANGCHAIN_API_KEY: str = ""
-    LANGCHAIN_PROJECT: str = "ai-project-manager"
+    LANGSMITH_TRACING: bool = True
+    LANGSMITH_ENDPOINT: str = "https://apac.api.smith.langchain.com"
+    LANGSMITH_API_KEY: str = ""
+    LANGSMITH_PROJECT: str = "ai-project-manager"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
