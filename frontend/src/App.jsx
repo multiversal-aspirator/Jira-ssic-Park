@@ -16,26 +16,73 @@ import { Kpi } from './components/Visuals';
 
 const API_BASE = '/api';
 
-// Updated dino-agent mapping per requirements:
-// Sprint → Stegosaurus (steady), Risk → T-Rex (alert), Dependency → Raptor (fast),
-// Forecasting → Ptero (bird's-eye), Reporting → Brachio (calm overview)
 const AGENT_DEFS = [
-  { id: 'sprint', name: 'Steggy', role: 'Sprint Agent', species: 'stego', accent: '#34c759', rate: 2.4 },
-  { id: 'risk', name: 'Rexford', role: 'Risk Agent', species: 'trex', accent: '#f57c00', rate: 1.8 },
-  { id: 'dependency', name: 'Velocity', role: 'Dependency Agent', species: 'raptor', accent: '#1976d2', rate: 2.2 },
-  { id: 'forecast', name: 'Skyview', role: 'Forecasting Agent', species: 'ptero', accent: '#9c27b0', rate: 1.6 },
-  { id: 'report', name: 'Alto', role: 'Reporting Agent', species: 'brachio', accent: '#558b2f', rate: 1.4 },
+  { id: 'sprint', name: 'Steggy', role: 'Sprint Agent', species: 'stego', accent: '#34c759' },
+  { id: 'risk', name: 'Rexford', role: 'Risk Agent', species: 'trex', accent: '#f57c00' },
+  { id: 'dependency', name: 'Velocity', role: 'Dependency Agent', species: 'raptor', accent: '#1976d2' },
+  { id: 'forecast', name: 'Skyview', role: 'Forecasting Agent', species: 'ptero', accent: '#9c27b0' },
+  { id: 'report', name: 'Alto', role: 'Reporting Agent', species: 'brachio', accent: '#558b2f' },
 ];
+
+const WORKFLOW_STAGES = {
+  sprint: [
+    { from: 0, to: 1200, start: 0, end: 10 },
+    { from: 1200, to: 3400, start: 10, end: 24 },
+    { from: 3400, to: 6200, start: 24, end: 39 },
+    { from: 6200, to: 9000, start: 39, end: 52 },
+  ],
+  risk: [
+    { from: 1800, to: 3300, start: 0, end: 8 },
+    { from: 3300, to: 5800, start: 8, end: 21 },
+    { from: 5800, to: 8800, start: 21, end: 36 },
+    { from: 8800, to: 11500, start: 36, end: 45 },
+  ],
+  dependency: [
+    { from: 3200, to: 5000, start: 0, end: 9 },
+    { from: 5000, to: 7600, start: 9, end: 23 },
+    { from: 7600, to: 10800, start: 23, end: 39 },
+    { from: 10800, to: 13500, start: 39, end: 48 },
+  ],
+  forecast: [
+    { from: 5600, to: 7600, start: 0, end: 7 },
+    { from: 7600, to: 10600, start: 7, end: 18 },
+    { from: 10600, to: 14000, start: 18, end: 31 },
+    { from: 14000, to: 16800, start: 31, end: 38 },
+  ],
+  report: [
+    { from: 7600, to: 10200, start: 0, end: 5 },
+    { from: 10200, to: 13800, start: 5, end: 12 },
+    { from: 13800, to: 17800, start: 12, end: 22 },
+    { from: 17800, to: 21000, start: 22, end: 30 },
+  ],
+};
 
 const idleAgents = () =>
   AGENT_DEFS.map((a) => ({ ...a, status: 'idle', progress: 0 }));
 
 function statusForProgress(p) {
   if (p <= 0) return 'idle';
-  if (p < 30) return 'fetching';
-  if (p < 65) return 'thinking';
+  if (p < 18) return 'fetching';
+  if (p < 38) return 'thinking';
   if (p < 100) return 'analyzing';
   return 'completed';
+}
+
+function getWorkflowProgress(agentId, elapsed) {
+  const stages = WORKFLOW_STAGES[agentId] || [];
+
+  if (!stages.length || elapsed < stages[0].from) {
+    return 0;
+  }
+
+  for (const stage of stages) {
+    if (elapsed >= stage.from && elapsed <= stage.to) {
+      const ratio = (elapsed - stage.from) / (stage.to - stage.from);
+      return stage.start + ratio * (stage.end - stage.start);
+    }
+  }
+
+  return stages[stages.length - 1].end;
 }
 
 export default function App() {
@@ -54,33 +101,75 @@ export default function App() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('overview');
 
-  // Agent activity simulation (visual only)
   const [agents, setAgents] = useState(idleAgents);
   const tickRef = useRef(null);
+  const completionTimersRef = useRef([]);
 
   useEffect(() => { localStorage.setItem('pm_projects', JSON.stringify(projects)); }, [projects]);
   useEffect(() => { if (activeProject) setForm(activeProject); }, [activeProject]);
 
-  // Drive agent progress while loading
   useEffect(() => {
-    if (loading) {
-      setAgents(AGENT_DEFS.map((a) => ({ ...a, status: 'fetching', progress: 2 })));
-      tickRef.current = setInterval(() => {
-        setAgents((prev) =>
-          prev.map((a) => {
-            const next = Math.min(94, a.progress + a.rate + Math.random() * 2);
-            return { ...a, progress: next, status: statusForProgress(next) };
-          })
-        );
-      }, 220);
-    } else {
+    if (!loading) {
       clearInterval(tickRef.current);
+      return;
     }
+
+    completionTimersRef.current.forEach(clearTimeout);
+    completionTimersRef.current = [];
+
+    const startedAt = Date.now();
+    setAgents(idleAgents());
+
+    tickRef.current = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+
+      setAgents((prev) =>
+        prev.map((agent) => {
+          const targetProgress = getWorkflowProgress(agent.id, elapsed);
+          const currentProgress = agent.progress || 0;
+
+          const nextProgress =
+            targetProgress > currentProgress
+              ? currentProgress + Math.min(targetProgress - currentProgress, 2.2)
+              : currentProgress;
+
+          return {
+            ...agent,
+            progress: nextProgress,
+            status: statusForProgress(nextProgress),
+          };
+        })
+      );
+    }, 500);
+
     return () => clearInterval(tickRef.current);
   }, [loading]);
 
   useEffect(() => {
-    if (report) setAgents(AGENT_DEFS.map((a) => ({ ...a, status: 'completed', progress: 100 })));
+    if (!report) return;
+
+    clearInterval(tickRef.current);
+    completionTimersRef.current.forEach(clearTimeout);
+    completionTimersRef.current = [];
+
+    AGENT_DEFS.forEach((agentDef, index) => {
+      const timer = setTimeout(() => {
+        setAgents((prev) =>
+          prev.map((agent) =>
+            agent.id === agentDef.id
+              ? { ...agent, status: 'completed', progress: 100 }
+              : agent
+          )
+        );
+      }, index * 250);
+
+      completionTimersRef.current.push(timer);
+    });
+
+    return () => {
+      completionTimersRef.current.forEach(clearTimeout);
+      completionTimersRef.current = [];
+    };
   }, [report]);
 
   const saveProject = (project) => {
@@ -156,13 +245,11 @@ export default function App() {
       const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params });
       setSyncStatus(data);
 
-      // Refresh team data after sync
       try {
         const teamRes = await axios.get(`${API_BASE}/team/overview`, { params: { project_key: form.project_key } });
         setTeamData(teamRes.data);
       } catch (e) { /* optional */ }
 
-      // Refresh events
       try {
         const evtRes = await axios.get(`${API_BASE}/intelligence/events`, { params: { limit: 20 } });
         setEvents(evtRes.data.events || []);
@@ -191,7 +278,6 @@ export default function App() {
     }
   };
 
-  // Construct action links
   const jiraUrl = form.project_key ? `https://hackathon-gep.atlassian.net/jira/software/projects/${form.project_key}/boards` : null;
   const githubUrl = form.github_repo ? `https://github.com/${form.github_repo}` : null;
   const githubPRs = form.github_repo ? `https://github.com/${form.github_repo}/pulls` : null;
@@ -209,7 +295,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── Park-Gate Header ── */}
       <header className="site-header">
         <span className="gate-vine" />
         <span className="header-dino"><DinoIcon species="trex" accent="#34c759" /></span>
@@ -218,7 +303,6 @@ export default function App() {
           <p>AI Project Manager Command Center</p>
         </div>
         <span className="header-spacer" />
-        {/* Manager action buttons */}
         <div className="action-row" style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
           {jiraUrl && (
             <a href={jiraUrl} target="_blank" rel="noopener noreferrer" className="btn-action">
@@ -239,7 +323,6 @@ export default function App() {
         <span className="header-badge"><span className="live-dot" /> 5 AGENTS READY</span>
       </header>
 
-      {/* ── Project Manager ── */}
       <ProjectManager
         projects={projects}
         activeProject={activeProject}
@@ -247,7 +330,6 @@ export default function App() {
         onRemove={removeProject}
       />
 
-      {/* ── Input Form ── */}
       <form className="panel form-section" onSubmit={handleSubmit}>
         <div className="form-grid">
           <div className="form-group">
@@ -297,15 +379,13 @@ export default function App() {
 
       {error && <div className="error">{error}</div>}
 
-      {/* Loading hint */}
       {loading && (
         <div className="loading-hint">
-          <p>The pack is on the hunt — 5 agents analyzing in parallel…</p>
+          <p>The pack is following the workflow — sprint signals first, then risks, dependencies, forecast, and final report…</p>
           <div className="footprints"><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span></div>
         </div>
       )}
 
-      {/* ── Multi-tab Navigation ── */}
       <nav className="tabs">
         {TABS.map((t) => (
           <button
@@ -318,7 +398,6 @@ export default function App() {
         ))}
       </nav>
 
-      {/* ── TAB: Overview ── */}
       {tab === 'overview' && (
         <>
           <AgentGrid agents={agents} />
@@ -344,34 +423,28 @@ export default function App() {
         </>
       )}
 
-      {/* ── TAB: Agents ── */}
       {tab === 'agents' && <AgentGrid agents={agents} />}
 
-      {/* ── TAB: Sprint ── */}
       {tab === 'sprint' && (
         report?.sprint_analysis
           ? <SprintCard data={report.sprint_analysis} jiraUrl={jiraUrl} />
           : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see sprint data.</p></div>
       )}
 
-      {/* ── TAB: Risks ── */}
       {tab === 'risks' && (
         report?.risk_analysis
           ? <RiskCard data={report.risk_analysis} />
           : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see risk data.</p></div>
       )}
 
-      {/* ── TAB: Dependencies ── */}
       {tab === 'dependencies' && (
         report?.dependency_analysis
           ? <DependencyCard data={report.dependency_analysis} />
           : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see dependencies.</p></div>
       )}
 
-      {/* ── TAB: Team ── */}
       {tab === 'team' && <TeamCard data={teamData} projectKey={form.project_key} />}
 
-      {/* ── TAB: Reports ── */}
       {tab === 'reports' && (
         <>
           {report?.delivery_forecast && <ForecastCard data={report.delivery_forecast} />}
@@ -381,7 +454,6 @@ export default function App() {
         </>
       )}
 
-      {/* ── TAB: Search ── */}
       {tab === 'search' && <SearchPanel projectKey={form.project_key} />}
     </div>
   );
