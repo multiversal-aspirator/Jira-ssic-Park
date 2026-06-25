@@ -26,6 +26,8 @@ export default function App() {
   const [teamData, setTeamData] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('analysis');
 
@@ -107,6 +109,52 @@ export default function App() {
     }
   };
 
+  const handleSync = async () => {
+    if (!form.project_key.trim()) return;
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const params = { project_key: form.project_key };
+      if (form.github_repo) params.github_repo = form.github_repo;
+      if (form.teams_channel) params.teams_channel = form.teams_channel;
+      const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params });
+      setSyncStatus(data);
+
+      // Refresh team data after sync
+      try {
+        const teamRes = await axios.get(`${API_BASE}/team/overview`, { params: { project_key: form.project_key } });
+        setTeamData(teamRes.data);
+      } catch (e) { /* optional */ }
+
+      // Refresh events
+      try {
+        const evtRes = await axios.get(`${API_BASE}/intelligence/events`, { params: { limit: 20 } });
+        setEvents(evtRes.data.events || []);
+      } catch (e) { /* optional */ }
+    } catch (err) {
+      setSyncStatus({ error: err.response?.data?.detail || err.message });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleClearDB = async () => {
+    if (!confirm(form.project_key
+      ? `Clear all data for project "${form.project_key}"?`
+      : 'Clear ALL data from the vector store?'
+    )) return;
+
+    try {
+      const params = form.project_key ? { project_key: form.project_key } : {};
+      await axios.delete(`${API_BASE}/intelligence/clear`, { params });
+      setSyncStatus({ cleared: true, scope: form.project_key || 'all' });
+      setTeamData(null);
+      setEvents([]);
+    } catch (err) {
+      setSyncStatus({ error: err.response?.data?.detail || err.message });
+    }
+  };
+
   return (
     <div className="app">
       <header>
@@ -146,12 +194,28 @@ export default function App() {
           <button className="btn-analyze" type="submit" disabled={loading}>
             {loading ? 'Analyzing...' : 'Run Project Analysis'}
           </button>
+          <button type="button" className="btn-sync" onClick={handleSync} disabled={syncing || !form.project_key}>
+            {syncing ? 'Syncing...' : 'Sync Data'}
+          </button>
+          <button type="button" className="btn-clear" onClick={handleClearDB}>
+            Clear DB
+          </button>
           {form.project_key && (
             <button type="button" className="btn-save" onClick={() => saveProject({ ...form })}>
               Save Project
             </button>
           )}
         </div>
+        {syncStatus && (
+          <div className={`sync-status ${syncStatus.error ? 'error' : ''}`}>
+            {syncStatus.error
+              ? `Sync failed: ${syncStatus.error}`
+              : syncStatus.cleared
+                ? `Cleared: ${syncStatus.scope === 'all' ? 'all data' : `project "${syncStatus.scope}"`}`
+                : `Synced: ${syncStatus.ingested?.jira || 0} Jira, ${syncStatus.ingested?.github || 0} GitHub, ${syncStatus.ingested?.teams || 0} Teams`
+            }
+          </div>
+        )}
       </form>
 
       {error && <div className="error">{error}</div>}

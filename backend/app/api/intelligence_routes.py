@@ -129,3 +129,22 @@ async def semantic_search(query: str, collection: str | None = None, limit: int 
     store = get_vector_store()
     results = store.search(query, collection_name=collection, n_results=limit)
     return {"query": query, "results": results}
+
+
+@router.delete("/clear")
+async def clear_vector_store(project_key: str | None = None):
+    """Clear the vector store. If project_key is provided, only clears that project's data."""
+    store = get_vector_store()
+    if project_key:
+        store.clear_project(project_key)
+        return {"status": "cleared", "scope": project_key}
+    else:
+        store.clear_all()
+        return {"status": "cleared", "scope": "all"}
+
+
+@router.get("/stats")
+async def vector_store_stats():
+    """Get vector store statistics."""
+    store = get_vector_store()
+    return store.get_stats()

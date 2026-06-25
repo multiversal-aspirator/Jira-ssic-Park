@@ -134,6 +134,44 @@ class VectorStore:
         results = self.search(project_key, n_results=n_results)
         return "\n".join(r["document"] for r in results)
 
+    def clear_all(self):
+        """Delete all data from all collections."""
+        for col in [self.commits, self.pull_requests, self.jira_tickets,
+                    self.teams_messages, self.meeting_notes, self.reports]:
+            ids = col.get()["ids"]
+            if ids:
+                col.delete(ids=ids)
+        logger.info("[VectorStore] All collections cleared")
+
+    def clear_project(self, project_key: str):
+        """Delete all data for a specific project."""
+        for col in [self.commits, self.pull_requests, self.jira_tickets,
+                    self.teams_messages, self.meeting_notes, self.reports]:
+            try:
+                results = col.get(where={"project": project_key})
+                if results["ids"]:
+                    col.delete(ids=results["ids"])
+            except Exception:
+                # Collection may not have 'project' metadata field
+                pass
+        logger.info(f"[VectorStore] Cleared data for project: {project_key}")
+
+    def get_stats(self) -> dict:
+        """Get collection counts."""
+        return {
+            "commits": self.commits.count(),
+            "pull_requests": self.pull_requests.count(),
+            "jira_tickets": self.jira_tickets.count(),
+            "teams_messages": self.teams_messages.count(),
+            "meeting_notes": self.meeting_notes.count(),
+            "reports": self.reports.count(),
+            "total": sum([
+                self.commits.count(), self.pull_requests.count(),
+                self.jira_tickets.count(), self.teams_messages.count(),
+                self.meeting_notes.count(), self.reports.count(),
+            ]),
+        }
+
 
 _store: VectorStore | None = None
 
