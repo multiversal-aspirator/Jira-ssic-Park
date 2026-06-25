@@ -74,19 +74,67 @@ class VectorStore:
         self.jira_tickets.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
 
     def ingest_teams_message(self, channel: str, message: dict):
-        msg_id = message.get("id", str(datetime.utcnow().timestamp()))
+        # Generate stable ID from content for deduplication
+        msg_id = message.get("id") or f"{message.get('day','')}-{message.get('timestamp','')}-{message.get('speaker','')}"
         doc_id = f"{channel}:{msg_id}"
-        body = message.get("body", {}).get("content", "") if isinstance(message.get("body"), dict) else str(message.get("body", ""))
-        sender = message.get("from", {}).get("user", {}).get("displayName", "Unknown") if isinstance(message.get("from"), dict) else "Unknown"
+
+        # Support both Graph API format and local file format
+        if "body" in message and isinstance(message.get("body"), dict):
+            body = message["body"].get("content", "")
+        elif "content" in message:
+            body = message["content"]
+        else:
+            body = str(message.get("body", ""))
+
+        if "from" in message and isinstance(message.get("from"), dict):
+            sender = message["from"].get("user", {}).get("displayName", "Unknown")
+        elif "speaker" in message:
+            sender = message["speaker"]
+        else:
+            sender = "Unknown"
 
         text = f"[Teams:{channel}] {sender}: {body[:1000]}"
         metadata = {
             "channel": channel,
             "sender": sender,
-            "created": message.get("createdDateTime", ""),
+            "created": message.get("createdDateTime", message.get("created", "")),
             "type": "teams_message",
         }
         self.teams_messages.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
+
+    def ingest_teams_transcript(self, channel: str, transcript: dict):
+        """Ingest a meeting transcript into the vector store."""
+        transcript_id = transcript.get("transcript_id", str(datetime.utcnow().timestamp()))
+        content = transcript.get("content", "")
+
+        # Split long transcripts into chunks for better retrieval
+        chunks = self._chunk_text(content, max_chars=1500)
+        for i, chunk in enumerate(chunks):
+            doc_id = f"{channel}:transcript:{transcript_id}:chunk-{i}"
+            text = f"[Teams Transcript:{channel}] {chunk}"
+            metadata = {
+                "channel": channel,
+                "transcript_id": transcript_id,
+                "source_file": transcript.get("source_file", ""),
+                "created": transcript.get("created", ""),
+                "chunk_index": i,
+                "type": "teams_transcript",
+            }
+            self.meeting_notes.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
+
+    def _chunk_text(self, text: str, max_chars: int = 1500) -> list[str]:
+        """Split text into chunks by line boundaries."""
+        lines = text.split("\n")
+        chunks = []
+        current = ""
+        for line in lines:
+            if len(current) + len(line) + 1 > max_chars and current:
+                chunks.append(current.strip())
+                current = ""
+            current += line + "\n"
+        if current.strip():
+            chunks.append(current.strip())
+        return chunks if chunks else [text[:max_chars]]
 
     def ingest_report(self, project_key: str, report_type: str, content: str):
         doc_id = f"{project_key}:{report_type}:{datetime.utcnow().isoformat()}"

@@ -99,17 +99,23 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
         except Exception as e:
             logger.warning(f"[Sync] GitHub sync failed: {e}")
 
-    # Sync Teams
-    if teams_channel:
-        try:
-            from app.services.teams_service import TeamsService
-            teams = TeamsService()
-            messages = await teams.get_channel_messages(teams_channel, limit=50)
-            for msg in messages:
-                store.ingest_teams_message(teams_channel, msg)
-                synced["teams"] += 1
-        except Exception as e:
-            logger.warning(f"[Sync] Teams sync failed: {e}")
+    # Sync Teams (always attempt — local mode reads from Messages folder)
+    try:
+        from app.services.teams_service import TeamsService
+        teams = TeamsService()
+        channel = teams_channel or "local"
+        messages = await teams.get_channel_messages(channel, limit=100)
+        for msg in messages:
+            store.ingest_teams_message(channel, msg)
+            synced["teams"] += 1
+
+        # Also sync transcripts
+        transcripts = await teams.get_meeting_transcripts(channel, limit=10)
+        for tr in transcripts:
+            store.ingest_teams_transcript(channel, tr)
+            synced["teams"] += 1
+    except Exception as e:
+        logger.warning(f"[Sync] Teams sync failed: {e}")
 
     return {"status": "sync_complete", "ingested": synced}
 

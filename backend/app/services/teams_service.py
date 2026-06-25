@@ -1,4 +1,7 @@
+import os
 import re
+from datetime import datetime
+from pathlib import Path
 
 import httpx
 from app.core.config import get_settings
@@ -9,15 +12,82 @@ logger = get_logger(__name__)
 GRAPH_API = "https://graph.microsoft.com/v1.0"
 GRAPH_BETA = "https://graph.microsoft.com/beta"
 
+# Path to local Messages folder for testing
+MESSAGES_DIR = Path(__file__).resolve().parent.parent.parent.parent / "Messages"
+
 
 class TeamsService:
     def __init__(self):
         settings = get_settings()
         self.default_team_id = settings.TEAMS_TEAM_ID
+        self.access_token = settings.TEAMS_ACCESS_TOKEN
         self.headers = {
-            "Authorization": f"Bearer {settings.TEAMS_ACCESS_TOKEN}",
+            "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        # Use local files when no valid token is configured
+        self.use_local = (
+            not self.access_token
+            or self.access_token.startswith("your")
+            or len(self.access_token) < 20
+        )
+
+    def _parse_message_file(self, filepath: Path) -> list[dict]:
+        """Parse a Messages/*.txt file into structured message records."""
+        messages = []
+        current_day = ""
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.rstrip("\n")
+                if not line.strip():
+                    continue
+                # Detect day headers like "DAY 1:-"
+                if re.match(r"^DAY\s+\d+", line, re.IGNORECASE):
+                    current_day = line.strip().rstrip(":-").strip()
+                    continue
+                # Parse message lines: [HH:MM AM/PM] Speaker: Message
+                match = re.match(
+                    r"\[(\d{1,2}:\d{2}\s*[AP]M)\]\s+(.+?):\s+(.*)", line
+                )
+                if match:
+                    timestamp, speaker, content = match.groups()
+                    messages.append({
+                        "day": current_day,
+                        "timestamp": timestamp.strip(),
+                        "speaker": speaker.strip(),
+                        "content": content.strip(),
+                        "created": f"{current_day} {timestamp.strip()}",
+                    })
+        return messages
+
+    def _get_local_messages(self, pattern: str = "Grp_chat") -> list[dict]:
+        """Load messages from local Messages folder matching pattern."""
+        all_messages = []
+        if not MESSAGES_DIR.exists():
+            logger.warning(f"Messages directory not found: {MESSAGES_DIR}")
+            return []
+        for filepath in sorted(MESSAGES_DIR.glob("*.txt")):
+            if pattern.lower() in filepath.name.lower():
+                all_messages.extend(self._parse_message_file(filepath))
+        return all_messages
+
+    def _get_local_transcripts(self, pattern: str = "Transcript") -> list[dict]:
+        """Load transcripts from local Messages folder matching pattern."""
+        transcripts = []
+        if not MESSAGES_DIR.exists():
+            logger.warning(f"Messages directory not found: {MESSAGES_DIR}")
+            return []
+        for filepath in sorted(MESSAGES_DIR.glob("*.txt")):
+            if pattern.lower() in filepath.name.lower():
+                content = filepath.read_text(encoding="utf-8")
+                transcripts.append({
+                    "meeting_id": filepath.stem,
+                    "transcript_id": filepath.stem,
+                    "created": datetime.now().isoformat(),
+                    "content": content,
+                    "source_file": filepath.name,
+                })
+        return transcripts
 
     def _resolve_team_id(self, team_id: str | None = None) -> str:
         resolved_team_id = team_id or self.default_team_id
@@ -31,6 +101,11 @@ class TeamsService:
         limit: int = 50,
         team_id: str | None = None,
     ) -> list:
+        if self.use_local:
+            logger.info("Using local Messages folder for channel messages")
+            messages = self._get_local_messages("Grp_chat")
+            return messages[:limit]
+
         resolved_team_id = self._resolve_team_id(team_id)
         logger.info(f"Fetching Teams messages from channel {channel}")
 
@@ -49,6 +124,10 @@ class TeamsService:
         text: str,
         team_id: str | None = None,
     ) -> dict:
+        if self.use_local:
+            logger.info(f"[LOCAL MODE] Would post to Teams channel {channel}: {text[:100]}...")
+            return {"id": "local-mock", "status": "simulated", "content": text}
+
         resolved_team_id = self._resolve_team_id(team_id)
 
         async with httpx.AsyncClient(headers=self.headers, timeout=30) as client:
@@ -71,6 +150,20 @@ class TeamsService:
         team_id: str | None = None,
     ) -> list[dict]:
         """Fetch meeting-related messages (event summaries, notes, recordings) from a channel."""
+        if self.use_local:
+            logger.info("Using local Messages folder for meeting notes")
+            messages = self._get_local_messages("Grp_chat")
+            # Return all messages as meeting notes context
+            notes = []
+            for msg in messages[:limit]:
+                notes.append({
+                    "subject": f"{msg['day']} - Team Discussion",
+                    "content": msg["content"],
+                    "from": msg["speaker"],
+                    "created": msg["created"],
+                })
+            return notes
+
         resolved_team_id = self._resolve_team_id(team_id)
         logger.info(f"Fetching meeting notes from Teams channel {channel}")
 
@@ -117,6 +210,11 @@ class TeamsService:
         team_id: str | None = None,
     ) -> list[dict]:
         """Fetch meeting transcriptions from Teams channel meetings."""
+        if self.use_local:
+            logger.info("Using local Messages folder for meeting transcripts")
+            transcripts = self._get_local_transcripts("Transcript")
+            return transcripts[:limit]
+
         resolved_team_id = self._resolve_team_id(team_id)
         logger.info(f"Fetching meeting transcripts from Teams channel {channel}")
 
