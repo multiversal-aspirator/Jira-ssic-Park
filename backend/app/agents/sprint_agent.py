@@ -1,7 +1,7 @@
 import json
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
-from app.core.config import get_settings
+
 from app.services.jira_service import JiraService
 from app.services.llm_service import get_chat_model, parse_llm_json
 from app.services.demo_data_service import load_demo_jira_issues
@@ -35,40 +35,95 @@ Respond ONLY with valid JSON matching this schema:
 ])
 
 
-def _build_demo_sprint_analysis() -> SprintAnalysis:
-    """Build SprintAnalysis from local demo data."""
-    logger.info("[SprintAgent] ⚡ Using DEMO FALLBACK data")
-    data = load_demo_jira_issues()
-    issues = data.get("issues", [])
+DONE_STATUSES = {"done", "closed", "resolved", "complete", "completed"}
+IN_PROGRESS_STATUSES = {
+    "in progress",
+    "in review",
+    "review",
+    "code review",
+    "qa",
+    "testing",
+    "development",
+}
+BLOCKED_STATUSES = {"blocked", "impediment"}
 
+
+def _status_name(issue: dict) -> str:
+    return str(issue.get("status", "Unknown")).strip()
+
+
+def _is_completed(issue: dict) -> bool:
+    return _status_name(issue).lower() in DONE_STATUSES
+
+
+def _is_in_progress(issue: dict) -> bool:
+    status = _status_name(issue).lower()
+    return status in IN_PROGRESS_STATUSES
+
+
+def _is_blocked(issue: dict) -> bool:
+    status = _status_name(issue).lower()
+    return bool(issue.get("is_blocked")) or status in BLOCKED_STATUSES or "block" in status
+
+
+def _story_points(issue: dict) -> float:
+    value = issue.get("story_points", 0)
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown") -> SprintAnalysis:
+    """Build SprintAnalysis deterministically from normalized Jira/demo issue data."""
+    logger.info(f"[SprintAgent] Using deterministic sprint analysis (source: {source})")
+
+    issues = sprint_data.get("issues", []) or []
     total = len(issues)
-    completed = sum(1 for i in issues if i["status"] == "Done")
-    in_progress = sum(1 for i in issues if i["status"] == "In Progress")
-    blocked = sum(1 for i in issues if i["status"] == "Blocked")
-    completion_pct = (completed / total * 100) if total else 0
 
-    completed_points = sum(i["story_points"] for i in issues if i["status"] == "Done")
-    total_points = sum(i["story_points"] for i in issues)
+    completed = sum(1 for issue in issues if _is_completed(issue))
+    blocked = sum(1 for issue in issues if _is_blocked(issue))
+    in_progress = sum(1 for issue in issues if _is_in_progress(issue))
 
-    if completion_pct >= 70:
+    completion_pct = (completed / total * 100) if total else 0.0
+
+    completed_points = sum(_story_points(issue) for issue in issues if _is_completed(issue))
+    total_points = sum(_story_points(issue) for issue in issues)
+
+    if total == 0:
+        status = SprintStatus.OFF_TRACK
+    elif blocked > 0 and completion_pct < 70:
+        status = SprintStatus.AT_RISK
+    elif completion_pct >= 70:
         status = SprintStatus.ON_TRACK
     elif completion_pct >= 40:
         status = SprintStatus.AT_RISK
     else:
         status = SprintStatus.OFF_TRACK
 
+    sprint_name = (
+        sprint_data.get("sprint_name")
+        or f"Sprint {sprint_data.get('sprint_id')}"
+        if sprint_data.get("sprint_id")
+        else "Current Sprint"
+    )
+
     return SprintAnalysis(
-        sprint_name=data.get("sprint_name", "Sprint 21"),
+        sprint_name=sprint_name,
         total_issues=total,
         completed=completed,
         in_progress=in_progress,
         blocked=blocked,
-        completion_percentage=completion_pct,
+        completion_percentage=round(completion_pct, 2),
         velocity=float(completed_points),
         status=status,
-        summary=f"Sprint has {completed}/{total} issues done ({completion_pct:.0f}%). "
-                f"{blocked} items blocked. {in_progress} in progress. "
-                f"Velocity: {completed_points}/{total_points} story points completed.",
+        summary=(
+            f"Sprint analysis from {source}: {completed}/{total} issues completed "
+            f"({completion_pct:.0f}%). {blocked} blocked, {in_progress} in progress. "
+            f"Velocity: {completed_points:g}/{total_points:g} story points completed."
+        ),
     )
 
 
@@ -99,4 +154,4 @@ async def run_sprint_agent(project_key: str, sprint_id: str | None = None) -> Sp
         return analysis
     except Exception as e:
         logger.warning(f"[SprintAgent] LLM analysis failed: {e}. Using deterministic fallback.")
-        return _build_demo_sprint_analysis()
+        return _build_sprint_analysis_from_data(sprint_data, source=source)
