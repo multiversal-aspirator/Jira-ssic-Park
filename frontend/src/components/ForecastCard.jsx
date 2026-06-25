@@ -1,43 +1,45 @@
+import DinoIcon from './DinoIcon';
+import { CircularGauge, Chip } from './Visuals';
+
 export default function ForecastCard({ data }) {
   if (!data) return null;
 
-  const likelihoodColor = {
-    high: '#22c55e',
-    medium: '#f59e0b',
-    low: '#ef4444',
+  const likeMeta = {
+    high: { color: '#34d27b', tone: 'good' },
+    medium: { color: '#e0a52a', tone: 'amber' },
+    low: { color: '#e5564b', tone: 'danger' },
   };
+  const meta = likeMeta[data.completion_likelihood] || { color: '#9cc2ab', tone: 'neutral' };
+  const pct = Math.round((data.confidence_score || 0) * 100);
+
+  const trendIcon = { improving: '▲', stable: '▬', declining: '▼' }[data.trend] || '▬';
 
   return (
     <div className="card">
-      <h3>Delivery Forecast</h3>
-      <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-        <div style={{
-          fontSize: '2rem',
-          fontWeight: 700,
-          color: likelihoodColor[data.completion_likelihood] || '#94a3b8',
-        }}>
-          {Math.round(data.confidence_score * 100)}%
-        </div>
-        <p style={{ color: '#94a3b8' }}>Confidence</p>
+      <div className="card-head">
+        <span className="card-head__dino"><DinoIcon species="ptero" accent="#9c27b0" /></span>
+        <h3>Forecasting Agent</h3>
+        <Chip tone={meta.tone}>{data.completion_likelihood?.toUpperCase()}</Chip>
       </div>
-      <ul>
-        <li>Likelihood: <strong>{data.completion_likelihood?.toUpperCase()}</strong></li>
-        <li>Trend: {data.trend}</li>
-        {data.predicted_completion_date && (
-          <li>Predicted Completion: {data.predicted_completion_date}</li>
-        )}
-      </ul>
+
+      <div className="card-visual">
+        <CircularGauge value={pct} size={120} stroke={11} sublabel="Confidence" color={meta.color} />
+        <div className="card-visual__meta">
+          <div className="stat-line"><span>Trend</span><span style={{ color: meta.color }}>{trendIcon} {data.trend}</span></div>
+          {data.predicted_completion_date && (
+            <div className="stat-line"><span>ETA</span><span>{data.predicted_completion_date}</span></div>
+          )}
+          <div className="stat-line"><span>Likelihood</span><span>{data.completion_likelihood}</span></div>
+        </div>
+      </div>
+
       {data.factors?.length > 0 && (
-        <>
-          <h4 style={{ marginTop: '0.8rem', fontSize: '0.9rem', color: '#94a3b8' }}>Factors</h4>
-          <ul>
-            {data.factors.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
-        </>
+        <div className="legend">
+          {data.factors.slice(0, 4).map((f, i) => (
+            <Chip key={i} tone="neutral">{f}</Chip>
+          ))}
+        </div>
       )}
-      <p style={{ marginTop: '0.8rem', fontSize: '0.9rem', color: '#94a3b8' }}>{data.summary}</p>
     </div>
   );
 }

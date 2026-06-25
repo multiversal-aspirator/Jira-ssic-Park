@@ -1,0 +1,278 @@
+DAY 1:-
+[09:00 AM] Jane Doe (Manager): Good morning team. Today we are starting Problem Statement 3: Meeting Intelligence & Action Item Orchestrator. The goal is to build a system that transforms meeting transcripts into summaries, decisions, action items, risks, owners, deadlines, and follow-up recommendations.
+
+[09:01 AM] Jane Doe (Manager): Our focus is not just summarization. We need structured outputs with traceability. Every decision, action item, or risk should point back to the transcript timestamp where it was found.
+
+[09:02 AM] Jane Doe (Manager): Team responsibilities are as follows. Jyotsna will own transcript ingestion, speaker attribution, and transcript normalization. Mohit will own LangGraph orchestration and the Decision Detection Agent. Divy will own the Action Item Extraction Agent and LangChain prompt structure. Aman will own the Meeting Summarization Agent and human-readable summaries. Lovenew will own Risk and Dependency Analysis, follow-up recommendations, and deployment support.
+
+[09:03 AM] Jyotsna Lal: I’ll start with the transcript input format. Since Teams access is uncertain, I’ll prepare hardcoded Teams-style transcripts first. Each line will have timestamp, speaker, role, and message.
+
+[09:04 AM] Mohit Dang: I’ll design the LangGraph workflow around those transcript segments. The graph should pass the same normalized transcript into all agents, then merge their outputs.
+
+[09:05 AM] Divy Agarwal: For action items, I’ll detect commitments, owners, and deadlines. I’ll also add confidence scores because some assignments will be explicit and some will be implied.
+
+[09:06 AM] Aman Sharma: I’ll focus on concise summaries. The output should separate meeting overview, key topics, decisions, blockers, and next steps.
+
+[09:07 AM] Lovenew Yadav: I’ll identify risks and dependencies from the same transcript. For example, if Teams access is delayed, that becomes a risk. If one agent depends on normalized transcript format, that becomes a dependency.
+
+[09:08 AM] Jane Doe (Manager): Correct. We also need the system to handle multiple topics in one meeting. Product, engineering, UI, deployment, and business follow-ups may all appear in the same transcript.
+
+[09:09 AM] Jyotsna Lal: I’ll include topic hints in the sample data naturally through the conversation, but I won’t manually label everything. The agents should identify topics themselves.
+
+[09:10 AM] Mohit Dang: For orchestration, I’ll create nodes for summarization, action extraction, decision detection, risk analysis, and final aggregation.
+
+[09:11 AM] Divy Agarwal: Should the action item agent create Jira-ready tasks?
+
+[09:12 AM] Jane Doe (Manager): Yes, at least in the output. It should recommend follow-up tasks with owner and due date. Later we can connect it to Jira.
+
+[09:13 AM] Aman Sharma: For manager-facing output, I’ll avoid long paragraphs. I’ll keep the summary readable and structured.
+
+[09:14 AM] Lovenew Yadav: Risk output should include severity, reason, owner if applicable, and evidence timestamp.
+
+[09:15 AM] Jane Doe (Manager): Good. MVP for Day 1 is simple: create demo transcript data, define agent responsibilities, and agree on the structured output format.
+
+[09:16 AM] Jyotsna Lal: I’ll create the first transcript file by today evening. It will simulate this kickoff meeting.
+
+[09:17 AM] Divy Agarwal: I’ll create the first action item schema. Fields will be action, owner, deadline, priority, confidence, and source timestamp.
+
+[09:18 AM] Mohit Dang: I’ll create the workflow state structure. It should store transcript segments, agent outputs, confidence scores, and final merged output.
+
+[09:19 AM] Aman Sharma: I’ll prepare the summary schema with short_summary, topics_discussed, key_points, and next_steps.
+
+[09:20 AM] Lovenew Yadav: I’ll prepare risk schema with risk, severity, dependency, mitigation, and evidence.
+
+[09:21 AM] Jane Doe (Manager): Let’s set deadlines. Jyotsna, transcript format and demo file by end of day. Divy, action item schema by tomorrow morning. Mohit, LangGraph skeleton by tomorrow afternoon. Aman, summary prompt by tomorrow. Lovenew, risk categories by tomorrow.
+
+[09:22 AM] Jyotsna Lal: Confirmed. I’ll also add multiple speakers and some ambiguous statements so extraction can be tested properly.
+
+[09:23 AM] Divy Agarwal: I’ll make sure the action agent does not over-extract vague suggestions. If someone says “we should think about deployment,” that should not become an action item unless assigned.
+
+[09:24 AM] Aman Sharma: I’ll make sure the summarization agent distinguishes discussion from decision. That is important.
+
+[09:25 AM] Mohit Dang: I’ll keep the workflow modular so we can later add live transcript ingestion or Teams chat ingestion.
+
+[09:26 AM] Lovenew Yadav: For deployment, I’ll first keep it local. Once the core workflow works, I’ll look at Docker support.
+
+[09:27 AM] Jane Doe (Manager): One important requirement: traceability. Every extracted output should include source timestamp. Do not skip this.
+
+[09:28 AM] Jyotsna Lal: Understood. I’ll make sure transcript lines have stable timestamps.
+
+[09:29 AM] Divy Agarwal: For confidence scores, explicit ownership like “Divy will build X” can be 0.9 or higher. Implied ownership can be lower.
+
+[09:30 AM] Aman Sharma: The summary can also mention confidence if the meeting has unclear decisions.
+
+[09:31 AM] Mohit Dang: The Decision Detection Agent should only detect actual decisions, not suggestions. For example, “we will use LangGraph” is a decision, but “maybe we can use LangGraph” is not.
+
+[09:32 AM] Lovenew Yadav: Risk Agent should detect uncertainty around Teams access and live meeting analysis as stretch risk.
+
+[09:33 AM] Jane Doe (Manager): Exactly. Live meeting analysis is a stretch goal. Don’t block MVP on that.
+
+[09:34 AM] Jyotsna Lal: I’ll keep the initial transcript ingestion file-based. Later it can be replaced with Teams API or uploaded recordings.
+
+[09:35 AM] Divy Agarwal: I’ll coordinate with Jyotsna’s transcript format before finalizing prompts.
+
+[09:36 AM] Aman Sharma: I’ll make sure the summary output is human-readable and also JSON-compatible.
+
+[09:37 AM] Mohit Dang: I’ll add agent names in the output so the dashboard can show which agent found what.
+
+[09:38 AM] Lovenew Yadav: I’ll include follow-up recommendation types like create task, assign owner, schedule reminder, and escalate blocker.
+
+[09:39 AM] Jane Doe (Manager): Good. Let’s proceed. Please post progress updates in the Teams group chat after lunch.
+
+[09:40 AM] Jyotsna Lal: I’ll start with the transcript file now.
+
+[09:41 AM] Divy Agarwal: I’ll draft the action item schema.
+
+[09:42 AM] Mohit Dang: I’ll start the graph structure.
+
+[09:43 AM] Aman Sharma: I’ll prepare summary sections.
+
+[09:44 AM] Lovenew Yadav: I’ll prepare risk categories and deployment notes.
+
+[09:45 AM] Jane Doe (Manager): Great. End of meeting.
+
+
+
+
+DAY 2:-
+[09:00 AM] Jane Doe (Manager): Good morning everyone. Yesterday we finalized responsibilities and agreed on the overall architecture. Today I want progress updates from everyone and any blockers that might affect the MVP timeline.
+
+[09:01 AM] Jyotsna Lal: I completed the first version of the Teams-style transcript format. Every transcript line now includes timestamp, speaker name, role, and message content. I also tested parsing with different speakers and repeated conversations.
+
+[09:02 AM] Jane Doe (Manager): Excellent. Were there any challenges while designing the transcript structure?
+
+[09:03 AM] Jyotsna Lal: One issue is that real meetings often contain interruptions and incomplete sentences. I think our parser should preserve the original transcript instead of trying to correct grammar because downstream agents may need the original wording for traceability.
+
+[09:04 AM] Mohit Dang: That's actually helpful. The LangGraph workflow will treat the transcript as immutable input. Every agent can process the same normalized transcript independently and later we'll merge the outputs.
+
+[09:05 AM] Jane Doe (Manager): Have you started implementing the graph?
+
+[09:06 AM] Mohit Dang: Yes. I've defined the workflow nodes. The sequence is Transcript Ingestion → Meeting Summarization → Action Item Extraction → Decision Detection → Risk & Dependency Analysis → Final Aggregation.
+
+[09:07 AM] Divy Agarwal: I've completed the initial action item extraction schema. The output contains action description, owner, deadline, confidence score, and transcript timestamp. I'm now working on improving owner detection.
+
+[09:08 AM] Aman Sharma: I also finished the first version of the meeting summary prompt. It separates the meeting into overview, discussion topics, key decisions, blockers, and next steps instead of generating one long paragraph.
+
+[09:09 AM] Lovenew Yadav: I've started defining risk categories. Right now I have Technical Risk, Schedule Risk, Resource Risk, Integration Risk, and Dependency Risk.
+
+[09:10 AM] Jane Doe (Manager): Good progress. Let's discuss integration. Since every agent consumes the same transcript, we need to make sure the transcript format remains stable.
+
+[09:11 AM] Jyotsna Lal: I'll freeze the transcript schema today so everyone can continue implementation without worrying about format changes.
+
+[09:12 AM] Mohit Dang: That helps a lot. Once the schema is frozen, I'll wire all agent nodes together and test end-to-end execution.
+
+[09:13 AM] Divy Agarwal: I have one concern. Sometimes action items don't explicitly mention the owner. For example, "This should be completed by Friday." We need a strategy for those cases.
+
+[09:14 AM] Aman Sharma: Maybe we can assign lower confidence scores whenever ownership is inferred rather than explicitly stated.
+
+[09:15 AM] Jane Doe (Manager): I like that approach. Explicit assignments should receive higher confidence than inferred assignments.
+
+[09:16 AM] Lovenew Yadav: The same applies to risks. Some blockers are directly mentioned, while others are implied from the conversation.
+
+[09:17 AM] Mohit Dang: We can also expose confidence scores in the dashboard so managers understand which outputs may require manual verification.
+
+[09:18 AM] Jane Doe (Manager): Agreed. Confidence scores should be available for summaries, action items, decisions, and risks.
+
+[09:19 AM] Jyotsna Lal: Another observation is that meetings often switch between multiple topics. The parser should not assume the entire meeting is about one subject.
+
+[09:20 AM] Aman Sharma: That's important because summaries should identify each topic separately. For today's meeting we've already discussed transcript parsing, orchestration, confidence scoring, and dashboard design.
+
+[09:21 AM] Divy Agarwal: I also think we should distinguish between decisions and suggestions. Someone saying "Maybe we should..." shouldn't appear as a confirmed decision.
+
+[09:22 AM] Mohit Dang: The Decision Detection Agent will look for phrases like "We have decided," "We'll use," or manager confirmations before marking something as a decision.
+
+[09:23 AM] Jane Doe (Manager): Exactly. False positives would reduce trust in the platform.
+
+[09:24 AM] Lovenew Yadav: From the risk perspective, I see one concern. Since we're currently using demo transcript files instead of live Teams data, we should clearly mention that in the architecture.
+
+[09:25 AM] Jane Doe (Manager): That's acceptable. Teams integration can be listed as future work. The important part is that the system can process transcripts regardless of the source.
+
+[09:26 AM] Jyotsna Lal: I'll prepare additional transcript samples after this meeting so we can test more edge cases.
+
+[09:27 AM] Divy Agarwal: I'll use those samples to improve action extraction accuracy.
+
+[09:28 AM] Aman Sharma: I'll also verify that summaries remain concise even when meetings become longer.
+
+[09:29 AM] Mohit Dang: I'm planning to make every agent independent so failures don't stop the overall workflow. If one agent fails, the final report should still contain outputs from the remaining agents.
+
+[09:30 AM] Jane Doe (Manager): That's a good design decision. Please make sure the final report identifies which agent failed instead of silently ignoring errors.
+
+[09:31 AM] Lovenew Yadav: I'll update the risk agent so missing outputs from another agent are also reported as workflow risks.
+
+[09:32 AM] Jane Doe (Manager): Let's briefly discuss the frontend. We don't want walls of text. The dashboard should present structured information visually.
+
+[09:33 AM] Aman Sharma: We can use cards for summary, decisions, risks, and action items. Later we'll replace text with charts and progress indicators wherever possible.
+
+[09:34 AM] Mohit Dang: The LangGraph execution status can also be visualized so users know which agents are currently processing.
+
+[09:35 AM] Jyotsna Lal: That would make the workflow much easier to understand during demos.
+
+[09:36 AM] Divy Agarwal: We should also keep every output traceable. Clicking an action item should reveal the transcript timestamp where it originated.
+
+[09:37 AM] Jane Doe (Manager): Yes, traceability remains one of our core requirements.
+
+[09:38 AM] Lovenew Yadav: I'll make sure follow-up recommendations include reasoning. Managers should understand why a recommendation was generated.
+
+[09:39 AM] Jane Doe (Manager): Great. Before tomorrow, I'd like everyone to integrate their current work and prepare for an end-to-end MVP demonstration.
+
+[09:40 AM] Jyotsna Lal: I'll prepare additional transcript files and finalize the parser.
+
+[09:41 AM] Divy Agarwal: I'll improve confidence scoring for extracted action items.
+
+[09:42 AM] Mohit Dang: I'll connect all LangGraph nodes and verify the workflow.
+
+[09:43 AM] Aman Sharma: I'll refine the meeting summary output and remove unnecessary verbosity.
+
+[09:44 AM] Lovenew Yadav: I'll finalize the initial risk categories and recommendation format.
+
+[09:45 AM] Jane Doe (Manager): Excellent work everyone. Let's reconvene tomorrow with a working MVP. Meeting adjourned.
+
+
+
+DAY 3:-
+
+[09:00 AM] Jane Doe (Manager): Good morning everyone. Today I'd like to review the MVP progress. Our objective is to verify that every major component is working together before we move on to UI improvements and integrations.
+
+[09:01 AM] Jane Doe (Manager): Let's begin with transcript ingestion. Jyotsna, how are things progressing?
+
+[09:02 AM] Jyotsna Lal: The transcript parser is complete for our current demo scope. It supports timestamp, speaker name, role, and message content. I've also created multiple sample transcripts to test different meeting scenarios.
+
+[09:03 AM] Jane Doe (Manager): Excellent. Are all transcript records being normalized consistently?
+
+[09:04 AM] Jyotsna Lal: Yes. Every transcript now follows a common structure, making it easier for downstream agents to process the data. This should also simplify future Teams integration.
+
+[09:05 AM] Jane Doe (Manager): Great. Mohit, can you update us on the orchestration workflow?
+
+[09:06 AM] Mohit Dang: The LangGraph workflow is functioning as expected. Transcript ingestion triggers all four agents independently. Once they finish processing, their outputs are merged into a consolidated meeting intelligence report.
+
+[09:07 AM] Jane Doe (Manager): Are the agents independent enough that one failure won't stop the workflow?
+
+[09:08 AM] Mohit Dang: Yes. If an individual agent encounters an error, the remaining agents continue processing. The final response indicates which agent failed so users know the report is only partially complete.
+
+[09:09 AM] Jane Doe (Manager): That's exactly what we wanted.
+
+[09:10 AM] Divy Agarwal: On the Action Item Extraction side, the current implementation successfully identifies explicit assignments, owners, deadlines, and confidence scores. I'm still improving extraction for indirect commitments.
+
+[09:11 AM] Jane Doe (Manager): Can you give an example?
+
+[09:12 AM] Divy Agarwal: If someone says, "I'll complete the parser by Friday," the confidence is very high. But if someone says, "We should probably look into deployment," there isn't a clear owner, so the confidence drops significantly.
+
+[09:13 AM] Aman Sharma: The summarization agent is now producing concise meeting summaries. Instead of long paragraphs, the output is divided into Meeting Overview, Discussion Topics, Key Decisions, Risks, and Next Steps.
+
+[09:14 AM] Jane Doe (Manager): That's much easier for managers to read.
+
+[09:15 AM] Lovenew Yadav: The Risk & Dependency Analysis Agent is now identifying technical blockers, unresolved dependencies, resource risks, and integration concerns. Each risk also includes evidence from the transcript and a suggested mitigation.
+
+[09:16 AM] Jane Doe (Manager): Very good. One thing I'd like us to improve next is manager recommendations. The system shouldn't stop after identifying risks. It should also recommend actions.
+
+[09:17 AM] Mohit Dang: We can add a recommendation generation step after all agent outputs have been merged.
+
+[09:18 AM] Divy Agarwal: That recommendation engine could use action items, decisions, and risks together. For example, if a deadline is approaching and no owner is assigned, it can recommend assigning one immediately.
+
+[09:19 AM] Aman Sharma: Similarly, if several risks relate to the same topic, the report could recommend scheduling a follow-up meeting.
+
+[09:20 AM] Lovenew Yadav: We can also prioritize recommendations based on severity so managers immediately see the most important actions.
+
+[09:21 AM] Jane Doe (Manager): Excellent suggestions. We'll add recommendation prioritization to our next sprint.
+
+[09:22 AM] Jyotsna Lal: Another improvement could be supporting transcript uploads directly from Teams once API access becomes available. Since our parser is already standardized, replacing the data source should require minimal changes.
+
+[09:23 AM] Mohit Dang: The orchestration workflow won't need to change. Only the transcript provider changes.
+
+[09:24 AM] Divy Agarwal: That will also help us validate the extraction agents on real conversations instead of only demo transcripts.
+
+[09:25 AM] Jane Doe (Manager): Good. Let's also discuss traceability. Are all outputs linked back to transcript timestamps?
+
+[09:26 AM] Jyotsna Lal: Yes. Every transcript segment has a timestamp, and each extracted result references its originating segment.
+
+[09:27 AM] Aman Sharma: I also include supporting timestamps in the summary where appropriate so managers can verify important discussions.
+
+[09:28 AM] Lovenew Yadav: Risks now reference transcript evidence as well. This makes recommendations easier to justify.
+
+[09:29 AM] Jane Doe (Manager): Excellent. That satisfies one of the major problem statement requirements.
+
+[09:30 AM] Mohit Dang: I have one proposal. We should visualize agent execution in the frontend so users can see the Meeting Summarization Agent, Action Item Agent, Decision Detection Agent, and Risk Agent working simultaneously.
+
+[09:31 AM] Jane Doe (Manager): Agreed. That will make demonstrations much more engaging.
+
+[09:32 AM] Aman Sharma: The dashboard should also replace long text with visual summaries. Progress indicators, counts, and cards would communicate information more effectively.
+
+[09:33 AM] Divy Agarwal: We could display the number of extracted action items, decisions, and risks as KPI cards, with expandable details if needed.
+
+[09:34 AM] Lovenew Yadav: Risk severity can be represented using color-coded indicators instead of large paragraphs.
+
+[09:35 AM] Jane Doe (Manager): Those UI improvements can be our next milestone after the MVP is stable.
+
+[09:36 AM] Jyotsna Lal: I'll continue preparing additional transcript samples so we can test more complex meetings involving multiple discussion topics.
+
+[09:37 AM] Mohit Dang: I'll optimize the orchestration workflow and improve execution logging.
+
+[09:38 AM] Divy Agarwal: I'll refine confidence scoring and reduce false positives in action item extraction.
+
+[09:39 AM] Aman Sharma: I'll improve summary formatting and prepare outputs suitable for both JSON and the frontend dashboard.
+
+[09:40 AM] Lovenew Yadav: I'll expand the recommendation engine to include follow-up reminders and mitigation suggestions.
+
+[09:41 AM] Jane Doe (Manager): Overall, the MVP is progressing well. We've completed the core architecture and established a strong foundation. Our next sprint will focus on richer UI, better recommendations, and integration with external tools.
+
+[09:42 AM] Jane Doe (Manager): Great work, everyone. Please continue updating progress in the Teams channel throughout the day. Meeting adjourned.

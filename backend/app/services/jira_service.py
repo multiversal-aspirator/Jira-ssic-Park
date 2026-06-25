@@ -98,7 +98,11 @@ class JiraService:
             "issues": normalized_issues,
         }
 
-    async def get_sprint_issues(self, project_key: str, sprint_id: str | None = None) -> dict:
+    async def get_sprint_issues(
+        self,
+        project_key: str,
+        sprint_id: str | None = None,
+    ) -> dict:
         jql = f"project = {project_key}"
         if sprint_id:
             jql += f" AND sprint = {sprint_id}"
@@ -130,8 +134,17 @@ class JiraService:
             },
         )
 
-        normalized = self._normalize_search_response(response, project_key, sprint_id, jql)
-        logger.info(f"Fetched and normalized {len(normalized['issues'])} Jira issues")
+        normalized = self._normalize_search_response(
+            response,
+            project_key,
+            sprint_id,
+            jql,
+        )
+
+        logger.info(
+            f"Fetched and normalized {len(normalized['issues'])} Jira issues"
+        )
+
         return normalized
 
     async def get_board_sprints(self, board_id: str) -> dict:
@@ -139,8 +152,13 @@ class JiraService:
             raise ValueError("JIRA_URL is not configured")
 
         url = f"{self.base_url}/rest/agile/1.0/board/{board_id}/sprint"
+
         async with httpx.AsyncClient(auth=self.auth, timeout=30) as client:
-            response = await client.request("GET", url, params={"state": "active,closed"})
+            response = await client.request(
+                "GET",
+                url,
+                params={"state": "active,closed"},
+            )
             response.raise_for_status()
             return response.json()
 

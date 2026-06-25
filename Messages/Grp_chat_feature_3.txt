@@ -1,0 +1,192 @@
+DAY 1:-
+[10:12 AM] Jane Doe (Manager): Good work in today's kickoff meeting, everyone. Please use this channel for progress updates and blockers.
+
+[10:14 AM] Jyotsna Lal: I've started working on the transcript parser. Creating a Teams-like transcript format first so we can continue development without waiting for API access.
+
+[10:16 AM] Mohit Dang: Sounds good. Once that's finalized, send me the schema. I'll integrate it into the LangGraph workflow.
+
+[10:17 AM] Jyotsna Lal: Sure. I'm keeping each record simple: timestamp, speaker, role, and message.
+
+[10:20 AM] Divy Agarwal: That'll work for the Action Item Agent too. I'll need timestamps and speaker names for confidence scoring.
+
+[10:23 AM] Aman Sharma: I'll start designing the summary output while you guys finalize the transcript format.
+
+[10:25 AM] Lovenew Yadav: I've started listing possible risks. Teams access is definitely one of them for now.
+
+[10:31 AM] Jane Doe (Manager): Please remember every output must be traceable back to the transcript.
+
+[10:35 AM] Jyotsna Lal: Yes. I'll preserve the original transcript exactly instead of modifying sentences.
+
+[10:41 AM] Mohit Dang: That's actually better. Each agent can work from the same source.
+
+[10:52 AM] Divy Agarwal: Quick question. Should implied action items receive lower confidence?
+
+[10:53 AM] Jane Doe (Manager): Yes. Only explicit ownership should have high confidence.
+
+[11:05 AM] Aman Sharma: Summary template is almost ready. Breaking it into Overview, Topics, Decisions, Risks and Next Steps.
+
+[11:18 AM] Lovenew Yadav: I'll also categorize risks into Technical, Dependency and Resource risks.
+
+[11:34 AM] Jyotsna Lal: Parser prototype is ready. I'll test with a larger transcript after lunch.
+
+[12:02 PM] Mohit Dang: Great. I'll wait for your sample before wiring the graph.
+
+[12:30 PM] Jane Doe (Manager): Nice progress everyone. Keep posting updates here.
+
+
+
+DAY 2:-
+[09:08 AM] Jane Doe (Manager): Good morning team. Hope everyone made progress yesterday. Please share your updates.
+
+[09:10 AM] Jyotsna Lal: Morning! The transcript parser is working well now. I've tested multiple speakers and repeated conversations. Everything is getting normalized correctly.
+
+[09:11 AM] Mohit Dang: Nice. Can you send me one of the sample transcripts? I'll use it to test the LangGraph workflow.
+
+[09:12 AM] Jyotsna Lal: Sure. I'll push the sample shortly.
+
+[09:15 AM] Divy Agarwal: I finished the first version of the Action Item schema. It now includes action, owner, deadline, confidence score and transcript timestamp.
+
+[09:17 AM] Aman Sharma: Great. I completed the first version of the meeting summary prompt. It separates overview, discussion topics, decisions and next steps.
+
+[09:18 AM] Lovenew Yadav: Risk categories are also ready. I currently have Technical, Schedule, Resource, Dependency and Integration risks.
+
+[09:21 AM] Jane Doe (Manager): Excellent progress. Are there any blockers?
+
+[09:23 AM] Mohit Dang: Minor one. I'm waiting for the finalized transcript schema before connecting all workflow nodes.
+
+[09:24 AM] Jyotsna Lal: That's fair. I'll freeze the schema today so there won't be any further changes.
+
+[09:28 AM] Divy Agarwal: One challenge I'm seeing is indirect ownership. Sometimes nobody explicitly says they'll do something.
+
+[09:30 AM] Aman Sharma: We should probably reduce the confidence score for those instead of assigning a random owner.
+
+[09:31 AM] Jane Doe (Manager): Agreed. We should never fabricate owners.
+
+[09:34 AM] Lovenew Yadav: Similar issue with risks. Some are implied from discussions instead of directly stated.
+
+[09:36 AM] Mohit Dang: We can surface confidence scores in the dashboard so managers know what may require manual review.
+
+[09:42 AM] Jane Doe (Manager): I like that idea. Please keep confidence scoring consistent across all agents.
+
+[10:05 AM] Jyotsna Lal: I've uploaded the finalized transcript sample. Mohit, you should be able to start integration now.
+
+[10:07 AM] Mohit Dang: Got it. Starting workflow integration.
+
+[10:18 AM] Divy Agarwal: While testing, I noticed that "We should discuss deployment next week" was incorrectly extracted as an action item.
+
+[10:20 AM] Aman Sharma: That's a good catch. Suggestions shouldn't become commitments.
+
+[10:22 AM] Jane Doe (Manager): Exactly. Action items must have intent and preferably ownership.
+
+[10:41 AM] Lovenew Yadav: Another observation: the Risk Agent should report missing owners as a project risk if important work has no assignee.
+
+[10:43 AM] Mohit Dang: That's useful. It'll also improve manager recommendations later.
+
+[11:02 AM] Jyotsna Lal: Parser is now stable. From my side, transcript ingestion is complete for the MVP.
+
+[11:05 AM] Jane Doe (Manager): Great work. Please begin integration testing this afternoon.
+
+[11:26 AM] Divy Agarwal: Once Mohit's workflow is running, I'll test the Action Item Agent on the full transcript instead of isolated examples.
+
+[11:30 AM] Aman Sharma: I'll also compare generated summaries with manual notes to see if we're missing important points.
+
+[11:48 AM] Lovenew Yadav: I'll begin drafting follow-up recommendation templates for managers.
+
+[12:10 PM] Jane Doe (Manager): Good progress everyone. Let's aim for an end-to-end demo tomorrow morning.
+
+[12:12 PM] Jyotsna Lal: Sounds good.
+
+[12:12 PM] Mohit Dang: 👍
+
+[12:13 PM] Divy Agarwal: 👍
+
+[12:13 PM] Aman Sharma: 👍
+
+[12:14 PM] Lovenew Yadav: 👍
+
+
+
+DAY 3:-
+[09:01 AM] Jane Doe (Manager): Good morning everyone. Today is our MVP review day. Please share the current status before we start integration testing.
+
+[09:03 AM] Jyotsna Lal: Morning! The transcript ingestion module is complete. I've tested all three sample meeting transcripts and they're parsing correctly.
+
+[09:05 AM] Mohit Dang: Nice. I've connected the LangGraph workflow to the latest transcript format. Initial tests are running successfully.
+
+[09:06 AM] Divy Agarwal: Action Item Extraction is working on the integrated workflow now. Confidence scores are also being generated correctly.
+
+[09:08 AM] Aman Sharma: Meeting summaries are looking much cleaner now. I'm removing repetitive information before generating the final output.
+
+[09:10 AM] Lovenew Yadav: Risk Agent is identifying blockers correctly. I'm now working on improving recommendation quality.
+
+[09:12 AM] Jane Doe (Manager): Great progress. Any blockers before today's demo?
+
+[09:14 AM] Mohit Dang: One small issue. The Decision Detection Agent occasionally classifies suggestions as confirmed decisions. I'm refining the prompt.
+
+[09:16 AM] Divy Agarwal: I noticed the same while testing. It happens mostly when people say "maybe" or "we could."
+
+[09:18 AM] Aman Sharma: We should probably filter those before they reach the Decision Agent.
+
+[09:20 AM] Jane Doe (Manager): Good catch. Let's treat only confirmed statements as decisions.
+
+[09:23 AM] Jyotsna Lal: I also found one edge case. Some transcript lines don't contain a speaker because of interruptions. Right now I'm assigning them to the previous speaker.
+
+[09:25 AM] Mohit Dang: That's reasonable for the demo. Later we can improve speaker attribution when we integrate with Microsoft Teams.
+
+[09:27 AM] Lovenew Yadav: I'll add that to our known limitations document.
+
+[09:30 AM] Jane Doe (Manager): Please do. We should clearly distinguish MVP limitations from future enhancements.
+
+[09:35 AM] Divy Agarwal: I'm testing transcripts with multiple discussion topics now. The Action Item Agent still extracts tasks correctly.
+
+[09:38 AM] Aman Sharma: Summary Agent is also identifying topic changes. Long meetings are now split into multiple discussion sections automatically.
+
+[09:41 AM] Mohit Dang: Workflow execution time is under five seconds on the sample transcripts.
+
+[09:42 AM] Jane Doe (Manager): That's excellent for a demo.
+
+[09:45 AM] Jyotsna Lal: I've also prepared additional transcript samples with interruptions and overlapping discussions so we can test robustness later.
+
+[09:48 AM] Lovenew Yadav: The Risk Agent detected missing owners for two action items in one of those transcripts. That's actually a useful manager insight.
+
+[09:50 AM] Divy Agarwal: Nice. I'll surface those with medium confidence since ownership wasn't explicitly assigned.
+
+[09:54 AM] Aman Sharma: I'm thinking of adding a small executive summary at the top of the report before the detailed sections.
+
+[09:56 AM] Jane Doe (Manager): Good idea. Managers usually read that first.
+
+[10:02 AM] Mohit Dang: The LangGraph execution log now shows which agent is currently running. That'll help once we improve the frontend.
+
+[10:05 AM] Jyotsna Lal: Speaking of frontend, after the backend stabilizes I'd like to replace long text with progress indicators and cards instead of paragraphs.
+
+[10:07 AM] Divy Agarwal: Agreed. A visual dashboard will be much easier to demonstrate.
+
+[10:10 AM] Lovenew Yadav: We could also show agent execution status in real time instead of only displaying the final report.
+
+[10:12 AM] Aman Sharma: Animated agent cards would look really good. Users could actually see each AI agent working.
+
+[10:14 AM] Jane Doe (Manager): Let's keep that as our next milestone after today's MVP. Backend stability comes first.
+
+[10:20 AM] Mohit Dang: Integration tests completed successfully from my side.
+
+[10:22 AM] Jyotsna Lal: Same here. Transcript ingestion is stable.
+
+[10:24 AM] Divy Agarwal: Action Item Agent is passing all current sample tests.
+
+[10:25 AM] Aman Sharma: Summary Agent is ready.
+
+[10:26 AM] Lovenew Yadav: Risk Agent and recommendation logic are ready for the demo.
+
+[10:30 AM] Jane Doe (Manager): Excellent work, everyone. This gives us a functional MVP that satisfies the core requirements. After the demo, we'll focus on live Teams integration, improved recommendations, and a richer dashboard experience.
+
+[10:31 AM] Jyotsna Lal: Looking forward to the demo.
+
+[10:32 AM] Mohit Dang: Same here 👍
+
+[10:32 AM] Divy Agarwal: Great work everyone!
+
+[10:33 AM] Aman Sharma: Let's crush the demo 🚀
+
+[10:34 AM] Lovenew Yadav: See you all at the presentation.
+
+[10:35 AM] Jane Doe (Manager): Thanks, team. Closing today's discussion.

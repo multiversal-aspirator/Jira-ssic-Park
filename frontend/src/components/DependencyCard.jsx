@@ -1,43 +1,54 @@
+import DinoIcon from './DinoIcon';
+import { Kpi, Chip } from './Visuals';
+
 export default function DependencyCard({ data }) {
   if (!data) return null;
 
+  const deps = data.dependencies || [];
+  const blocking = deps.filter((d) => d.is_blocking).length;
+
   return (
     <div className="card">
-      <h3>Dependency Tracking</h3>
-      {data.dependencies?.length > 0 && (
-        <>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
-            {data.dependencies.length} dependencies found
-          </p>
-          <ul>
-            {data.dependencies.map((dep, i) => (
-              <li key={i}>
-                {dep.source_issue} → {dep.target_issue}
-                <span style={{ color: dep.is_blocking ? '#ef4444' : '#94a3b8', marginLeft: '0.5rem' }}>
-                  ({dep.dependency_type}{dep.is_blocking ? ' ⚠ BLOCKING' : ''})
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
+      <div className="card-head">
+        <span className="card-head__dino"><DinoIcon species="raptor" accent="#1976d2" /></span>
+        <h3>Dependency Agent</h3>
+        {blocking > 0 && <Chip tone="danger">{blocking} blocking</Chip>}
+      </div>
+
+      <div className="kpi-row" style={{ marginBottom: '1rem' }}>
+        <Kpi value={deps.length} label="Links" color="#38bdf8" />
+        <Kpi value={blocking} label="Blocking" color={blocking ? '#e5564b' : '#9cc2ab'} />
+        <Kpi value={data.conflicts?.length || 0} label="Conflicts" color={data.conflicts?.length ? '#f59e0b' : '#9cc2ab'} />
+      </div>
+
+      {deps.length > 0 && (
+        <div>
+          {deps.slice(0, 6).map((dep, i) => (
+            <div key={i} className="dep-row">
+              <span className="dep-node">{dep.source_issue}</span>
+              <span className={`dep-arrow ${dep.is_blocking ? 'blocking' : ''}`}>
+                {dep.is_blocking ? '⛔' : '→'}
+              </span>
+              <span className="dep-node">{dep.target_issue}</span>
+              <Chip tone={dep.is_blocking ? 'danger' : 'neutral'}>{dep.dependency_type}</Chip>
+            </div>
+          ))}
+        </div>
       )}
-      {data.conflicts?.length > 0 && (
-        <>
-          <h4 style={{ color: '#ef4444', marginTop: '0.8rem' }}>Conflicts</h4>
-          <ul>
-            {data.conflicts.map((c, i) => (
-              <li key={i} style={{ color: '#fca5a5' }}>{c}</li>
-            ))}
-          </ul>
-        </>
-      )}
+
       {data.critical_path?.length > 0 && (
         <>
-          <h4 style={{ color: '#f59e0b', marginTop: '0.8rem' }}>Critical Path</h4>
-          <p style={{ fontSize: '0.9rem' }}>{data.critical_path.join(' → ')}</p>
+          <h4 style={{ marginTop: '0.9rem' }}>Critical Path</h4>
+          <div className="dep-row" style={{ flexWrap: 'wrap', borderBottom: 'none' }}>
+            {data.critical_path.map((node, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span className="dep-node">{node}</span>
+                {i < data.critical_path.length - 1 && <span className="dep-arrow">→</span>}
+              </span>
+            ))}
+          </div>
         </>
       )}
-      <p style={{ marginTop: '0.8rem', fontSize: '0.9rem', color: '#94a3b8' }}>{data.summary}</p>
     </div>
   );
 }

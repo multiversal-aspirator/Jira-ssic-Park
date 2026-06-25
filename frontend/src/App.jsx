@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import HealthScore from './components/HealthScore';
 import SprintCard from './components/SprintCard';
@@ -10,12 +10,35 @@ import TeamCard from './components/TeamCard';
 import EventFeed from './components/EventFeed';
 import SearchPanel from './components/SearchPanel';
 import ProjectManager from './components/ProjectManager';
-import StatusBar from './components/StatusBar';
+import AgentGrid from './components/AgentGrid';
+import DinoIcon from './components/DinoIcon';
+import { Kpi } from './components/Visuals';
 
 const API_BASE = '/api';
 
+// Updated dino-agent mapping per requirements:
+// Sprint → Stegosaurus (steady), Risk → T-Rex (alert), Dependency → Raptor (fast),
+// Forecasting → Ptero (bird's-eye), Reporting → Brachio (calm overview)
+const AGENT_DEFS = [
+  { id: 'sprint', name: 'Steggy', role: 'Sprint Agent', species: 'stego', accent: '#34c759', rate: 2.4 },
+  { id: 'risk', name: 'Rexford', role: 'Risk Agent', species: 'trex', accent: '#f57c00', rate: 1.8 },
+  { id: 'dependency', name: 'Velocity', role: 'Dependency Agent', species: 'raptor', accent: '#1976d2', rate: 2.2 },
+  { id: 'forecast', name: 'Skyview', role: 'Forecasting Agent', species: 'ptero', accent: '#9c27b0', rate: 1.6 },
+  { id: 'report', name: 'Alto', role: 'Reporting Agent', species: 'brachio', accent: '#558b2f', rate: 1.4 },
+];
+
+const idleAgents = () =>
+  AGENT_DEFS.map((a) => ({ ...a, status: 'idle', progress: 0 }));
+
+function statusForProgress(p) {
+  if (p <= 0) return 'idle';
+  if (p < 30) return 'fetching';
+  if (p < 65) return 'thinking';
+  if (p < 100) return 'analyzing';
+  return 'completed';
+}
+
 export default function App() {
-  // Saved projects from localStorage
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem('pm_projects');
     return saved ? JSON.parse(saved) : [];
@@ -29,19 +52,36 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState('analysis');
+  const [tab, setTab] = useState('overview');
 
-  // Persist projects to localStorage
-  useEffect(() => {
-    localStorage.setItem('pm_projects', JSON.stringify(projects));
-  }, [projects]);
+  // Agent activity simulation (visual only)
+  const [agents, setAgents] = useState(idleAgents);
+  const tickRef = useRef(null);
 
-  // Load active project into form
+  useEffect(() => { localStorage.setItem('pm_projects', JSON.stringify(projects)); }, [projects]);
+  useEffect(() => { if (activeProject) setForm(activeProject); }, [activeProject]);
+
+  // Drive agent progress while loading
   useEffect(() => {
-    if (activeProject) {
-      setForm(activeProject);
+    if (loading) {
+      setAgents(AGENT_DEFS.map((a) => ({ ...a, status: 'fetching', progress: 2 })));
+      tickRef.current = setInterval(() => {
+        setAgents((prev) =>
+          prev.map((a) => {
+            const next = Math.min(94, a.progress + a.rate + Math.random() * 2);
+            return { ...a, progress: next, status: statusForProgress(next) };
+          })
+        );
+      }, 220);
+    } else {
+      clearInterval(tickRef.current);
     }
-  }, [activeProject]);
+    return () => clearInterval(tickRef.current);
+  }, [loading]);
+
+  useEffect(() => {
+    if (report) setAgents(AGENT_DEFS.map((a) => ({ ...a, status: 'completed', progress: 100 })));
+  }, [report]);
 
   const saveProject = (project) => {
     const existing = projects.find(p => p.project_key === project.project_key);
@@ -60,12 +100,11 @@ export default function App() {
       setForm({ project_key: '', sprint_id: '', github_repo: '', teams_channel: '' });
       setReport(null);
       setTeamData(null);
+      setAgents(idleAgents());
     }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => { setForm({ ...form, [e.target.name]: e.target.value }); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,24 +125,21 @@ export default function App() {
       };
       const { data } = await axios.post(`${API_BASE}/project/analyze`, payload);
       setReport(data);
-
-      // Save project config on successful analysis
       saveProject({ ...form });
 
-      // Fetch team data
       try {
         const teamRes = await axios.get(`${API_BASE}/team/overview`, { params: { project_key: form.project_key } });
         setTeamData(teamRes.data);
-      } catch (e) { /* team data optional */ }
+      } catch (e) { /* optional */ }
 
-      // Fetch events
       try {
         const evtRes = await axios.get(`${API_BASE}/intelligence/events`, { params: { limit: 20 } });
         setEvents(evtRes.data.events || []);
-      } catch (e) { /* events optional */ }
+      } catch (e) { /* optional */ }
 
     } catch (err) {
       setError(err.response?.data?.detail || err.message);
+      setAgents(idleAgents());
     } finally {
       setLoading(false);
     }
@@ -155,14 +191,55 @@ export default function App() {
     }
   };
 
+  // Construct action links
+  const jiraUrl = form.project_key ? `https://hackathon-gep.atlassian.net/jira/software/projects/${form.project_key}/boards` : null;
+  const githubUrl = form.github_repo ? `https://github.com/${form.github_repo}` : null;
+  const githubPRs = form.github_repo ? `https://github.com/${form.github_repo}/pulls` : null;
+
+  const TABS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'agents', label: 'Agents' },
+    { key: 'sprint', label: 'Sprint' },
+    { key: 'risks', label: 'Risks' },
+    { key: 'dependencies', label: 'Dependencies' },
+    { key: 'team', label: 'Team' },
+    { key: 'reports', label: 'Reports' },
+    { key: 'search', label: 'Search' },
+  ];
+
   return (
     <div className="app">
-      <header>
-        <h1>AI Project Intelligence</h1>
-        <p>Continuous project monitoring & report generation</p>
+      {/* ── Park-Gate Header ── */}
+      <header className="site-header">
+        <span className="gate-vine" />
+        <span className="header-dino"><DinoIcon species="trex" accent="#34c759" /></span>
+        <div className="header-content">
+          <h1>Jirassic Park</h1>
+          <p>AI Project Manager Command Center</p>
+        </div>
+        <span className="header-spacer" />
+        {/* Manager action buttons */}
+        <div className="action-row" style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
+          {jiraUrl && (
+            <a href={jiraUrl} target="_blank" rel="noopener noreferrer" className="btn-action">
+              <span className="icon">📋</span> Open Jira Board
+            </a>
+          )}
+          {githubUrl && (
+            <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="btn-action">
+              <span className="icon">🐙</span> Open Repo
+            </a>
+          )}
+          {githubPRs && (
+            <a href={githubPRs} target="_blank" rel="noopener noreferrer" className="btn-action">
+              <span className="icon">🔀</span> Pull Requests
+            </a>
+          )}
+        </div>
+        <span className="header-badge"><span className="live-dot" /> 5 AGENTS READY</span>
       </header>
 
-      {/* Project Manager — saved projects */}
+      {/* ── Project Manager ── */}
       <ProjectManager
         projects={projects}
         activeProject={activeProject}
@@ -170,8 +247,8 @@ export default function App() {
         onRemove={removeProject}
       />
 
-      {/* Input Form */}
-      <form className="form-section" onSubmit={handleSubmit}>
+      {/* ── Input Form ── */}
+      <form className="panel form-section" onSubmit={handleSubmit}>
         <div className="form-grid">
           <div className="form-group">
             <label htmlFor="project_key">Jira Project Key *</label>
@@ -192,7 +269,7 @@ export default function App() {
         </div>
         <div className="form-actions">
           <button className="btn-analyze" type="submit" disabled={loading}>
-            {loading ? 'Analyzing...' : 'Run Project Analysis'}
+            {loading ? 'Releasing agents…' : '🦖 Release the Agents'}
           </button>
           <button type="button" className="btn-sync" onClick={handleSync} disabled={syncing || !form.project_key}>
             {syncing ? 'Syncing...' : 'Sync Data'}
@@ -220,66 +297,92 @@ export default function App() {
 
       {error && <div className="error">{error}</div>}
 
+      {/* Loading hint */}
       {loading && (
-        <div className="loading">
-          <div className="spinner" />
-          <p>Running 5 agents in parallel...</p>
-          <StatusBar progress={0} label="Initializing..." animated />
+        <div className="loading-hint">
+          <p>The pack is on the hunt — 5 agents analyzing in parallel…</p>
+          <div className="footprints"><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span></div>
         </div>
       )}
 
-      {report && (
-        <>
-          {/* Tab navigation */}
-          <nav className="tabs">
-            <button className={tab === 'analysis' ? 'tab active' : 'tab'} onClick={() => setTab('analysis')}>Analysis</button>
-            <button className={tab === 'team' ? 'tab active' : 'tab'} onClick={() => setTab('team')}>Team</button>
-            <button className={tab === 'events' ? 'tab active' : 'tab'} onClick={() => setTab('events')}>Events</button>
-            <button className={tab === 'search' ? 'tab active' : 'tab'} onClick={() => setTab('search')}>Search</button>
-          </nav>
+      {/* ── Multi-tab Navigation ── */}
+      <nav className="tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={tab === t.key ? 'tab active' : 'tab'}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
 
-          {tab === 'analysis' && (
+      {/* ── TAB: Overview ── */}
+      {tab === 'overview' && (
+        <>
+          <AgentGrid agents={agents} />
+          {report && (
             <>
               <HealthScore score={report.health_score} evidence={report.evidence_summary} />
-
-              {/* Progress bars */}
-              <div className="status-bars">
+              <div className="summary-strip">
                 {report.sprint_analysis && (
-                  <StatusBar
-                    progress={report.sprint_analysis.completion_percentage}
-                    label={`Sprint: ${report.sprint_analysis.completion_percentage?.toFixed(0)}% complete`}
-                    color={report.sprint_analysis.status === 'on_track' ? '#22c55e' : report.sprint_analysis.status === 'at_risk' ? '#f59e0b' : '#ef4444'}
-                  />
+                  <Kpi value={`${Math.round(report.sprint_analysis.completion_percentage || 0)}%`} label="Sprint Done" color="#2e7d32" icon="🦕" />
+                )}
+                {report.risk_analysis && (
+                  <Kpi value={report.risk_analysis.risks?.length || 0} label="Active Risks" color="#e65100" icon="⚠️" />
+                )}
+                {report.dependency_analysis && (
+                  <Kpi value={report.dependency_analysis.dependencies?.length || 0} label="Dependencies" color="#1565c0" icon="🔗" />
                 )}
                 {report.delivery_forecast && (
-                  <StatusBar
-                    progress={report.delivery_forecast.confidence_score * 100}
-                    label={`Forecast Confidence: ${(report.delivery_forecast.confidence_score * 100).toFixed(0)}%`}
-                    color="#8b5cf6"
-                  />
+                  <Kpi value={`${Math.round((report.delivery_forecast.confidence_score || 0) * 100)}%`} label="Forecast" color="#7b1fa2" icon="🔭" />
                 )}
-                <StatusBar
-                  progress={report.health_score}
-                  label={`Health Score: ${report.health_score?.toFixed(0)}/100`}
-                  color={report.health_score >= 70 ? '#22c55e' : report.health_score >= 40 ? '#f59e0b' : '#ef4444'}
-                />
-              </div>
-
-              <div className="report-grid">
-                <SprintCard data={report.sprint_analysis} />
-                <RiskCard data={report.risk_analysis} />
-                <DependencyCard data={report.dependency_analysis} />
-                <ReportCard data={report.stakeholder_report} />
-                <ForecastCard data={report.delivery_forecast} />
               </div>
             </>
           )}
-
-          {tab === 'team' && <TeamCard data={teamData} projectKey={form.project_key} />}
-          {tab === 'events' && <EventFeed events={events} />}
-          {tab === 'search' && <SearchPanel projectKey={form.project_key} />}
         </>
       )}
+
+      {/* ── TAB: Agents ── */}
+      {tab === 'agents' && <AgentGrid agents={agents} />}
+
+      {/* ── TAB: Sprint ── */}
+      {tab === 'sprint' && (
+        report?.sprint_analysis
+          ? <SprintCard data={report.sprint_analysis} jiraUrl={jiraUrl} />
+          : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see sprint data.</p></div>
+      )}
+
+      {/* ── TAB: Risks ── */}
+      {tab === 'risks' && (
+        report?.risk_analysis
+          ? <RiskCard data={report.risk_analysis} />
+          : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see risk data.</p></div>
+      )}
+
+      {/* ── TAB: Dependencies ── */}
+      {tab === 'dependencies' && (
+        report?.dependency_analysis
+          ? <DependencyCard data={report.dependency_analysis} />
+          : <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to see dependencies.</p></div>
+      )}
+
+      {/* ── TAB: Team ── */}
+      {tab === 'team' && <TeamCard data={teamData} projectKey={form.project_key} />}
+
+      {/* ── TAB: Reports ── */}
+      {tab === 'reports' && (
+        <>
+          {report?.delivery_forecast && <ForecastCard data={report.delivery_forecast} />}
+          {report?.stakeholder_report && <ReportCard data={report.stakeholder_report} />}
+          {!report && <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to generate reports.</p></div>}
+          {report && <EventFeed events={events} />}
+        </>
+      )}
+
+      {/* ── TAB: Search ── */}
+      {tab === 'search' && <SearchPanel projectKey={form.project_key} />}
     </div>
   );
 }

@@ -1,33 +1,52 @@
+import DinoIcon from './DinoIcon';
+import { Chip, toneForRisk } from './Visuals';
+
+const SEV_COLOR = { critical: '#e5564b', high: '#f59e0b', medium: '#e0a52a', low: '#34d27b' };
+
 export default function RiskCard({ data }) {
   if (!data) return null;
 
+  const risks = data.risks || [];
+  const counts = risks.reduce((acc, r) => {
+    acc[r.severity] = (acc[r.severity] || 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <div className="card">
-      <h3>
-        Risk Analysis
-        <span className={`badge badge-${data.overall_risk_level}`}>
-          {data.overall_risk_level?.toUpperCase()}
-        </span>
-      </h3>
-      {data.risks?.length > 0 ? (
-        <ul>
-          {data.risks.map((risk, i) => (
-            <li key={i} style={{ padding: '0.5rem 0' }}>
-              <strong>{risk.title}</strong>
-              <span className={`badge badge-${risk.severity}`}>{risk.severity}</span>
-              <br />
-              <small style={{ color: '#94a3b8' }}>
-                Evidence: {risk.evidence}<br />
-                Impact: {risk.impact}<br />
-                Action: {risk.recommendation}
-              </small>
-            </li>
+      <div className="card-head">
+        <span className="card-head__dino"><DinoIcon species="trex" accent="#f57c00" /></span>
+        <h3>Risk Agent</h3>
+        <Chip tone={toneForRisk(data.overall_risk_level)}>{data.overall_risk_level?.toUpperCase()}</Chip>
+      </div>
+
+      <div className="legend" style={{ marginBottom: '0.8rem' }}>
+        {['critical', 'high', 'medium', 'low'].map((sev) => (
+          <span key={sev} className="legend-item">
+            <span className="legend-dot" style={{ background: SEV_COLOR[sev] }} />
+            {sev} {counts[sev] || 0}
+          </span>
+        ))}
+      </div>
+
+      {risks.length > 0 ? (
+        <div>
+          {risks.map((risk, i) => (
+            <div key={i} className="risk-row">
+              <span className="risk-sev-bar" style={{ background: SEV_COLOR[risk.severity] || '#3a5c47' }} />
+              <div className="risk-row__body">
+                <div className="risk-row__title">
+                  <strong>{risk.title}</strong>
+                  <Chip tone={toneForRisk(risk.severity)}>{risk.severity}</Chip>
+                </div>
+                <div className="risk-row__detail">{risk.recommendation || risk.impact}</div>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
-        <p style={{ color: '#22c55e' }}>No risks detected</p>
+        <p style={{ color: '#34d27b' }}>No risks detected — the herd is calm.</p>
       )}
-      <p style={{ marginTop: '0.8rem', fontSize: '0.9rem', color: '#94a3b8' }}>{data.summary}</p>
     </div>
   );
 }
