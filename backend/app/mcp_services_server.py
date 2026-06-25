@@ -79,5 +79,33 @@ async def notes_save(filename: str, content: str) -> str:
     return await notes.save_note(filename=safe_name, content=content)
 
 
+@mcp.tool()
+def project_search(query: str, collection: str | None = None, limit: int = 10) -> list[dict]:
+    """Semantic search across all project knowledge (commits, PRs, tickets, messages, reports)."""
+    from app.services.vector_store import get_vector_store
+    store = get_vector_store()
+    return store.search(query, collection_name=collection, n_results=limit)
+
+
+@mcp.tool()
+async def project_ask(question: str, project_key: str | None = None) -> str:
+    """Ask a natural language question about a project. Uses RAG over the vector database."""
+    from app.services.vector_store import get_vector_store
+    from app.services.llm_service import get_chat_model
+
+    store = get_vector_store()
+    query = f"{project_key}: {question}" if project_key else question
+    results = store.search(query, n_results=15)
+
+    if not results:
+        return "No project data available. Ingest data via webhooks or manual sync first."
+
+    context = "\n---\n".join(r["document"] for r in results)
+    llm = get_chat_model()
+    prompt = f"Answer based on this project data:\n\n{context}\n\nQuestion: {question}"
+    response = await llm.ainvoke(prompt)
+    return response.content
+
+
 if __name__ == "__main__":
     mcp.run()
