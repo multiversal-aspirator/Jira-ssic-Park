@@ -106,14 +106,6 @@ class JiraService:
             jql += " AND sprint in openSprints()"
 
         logger.info(f"Fetching Jira issues: {jql}")
-<<<<<<< HEAD
-        # Use POST /search/jql (v3 search endpoint deprecated, returns 410)
-        return await self._request("POST", "search/jql", json={
-            "jql": jql,
-            "maxResults": 100,
-            "fields": ["summary", "status", "assignee", "priority", "issuetype", "created", "updated", "duedate", "issuelinks"],
-        })
-=======
 
         fields = [
             "summary",
@@ -141,7 +133,6 @@ class JiraService:
         normalized = self._normalize_search_response(response, project_key, sprint_id, jql)
         logger.info(f"Fetched and normalized {len(normalized['issues'])} Jira issues")
         return normalized
->>>>>>> 0d8136bd0dc05dc34c73a31261292181e6bd303d
 
     async def get_board_sprints(self, board_id: str) -> dict:
         if not self.base_url:
