@@ -1,6 +1,18 @@
 from dotenv import load_dotenv
 load_dotenv()  # Load .env into os.environ (needed by langsmith SDK)
 
+import logging
+import sys
+
+# Configure root logger so ALL app logs print to terminal
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+    stream=sys.stdout,
+    force=True,
+)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.project_routes import router as project_router

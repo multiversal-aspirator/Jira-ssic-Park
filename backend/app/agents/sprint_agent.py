@@ -128,22 +128,24 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
 
 
 @traceable(name="SprintAgent")
-async def run_sprint_agent(
-    project_key: str,
-    sprint_id: str | None = None,
-    epic_key: str | None = None,
-) -> SprintAnalysis:
-    logger.info(f"[SprintAgent] Analyzing sprint for project {project_key}, epic={epic_key}")
+async def run_sprint_agent(project_key: str, sprint_id: str | None = None, jira_data: dict | None = None) -> SprintAnalysis:
+    logger.info(f"[SprintAgent] Analyzing sprint for project {project_key}")
 
-    try:
-        jira = JiraService()
-        sprint_data = await jira.get_sprint_issues(project_key, sprint_id, epic_key)
-        source = "jira"
-        logger.info(f"[SprintAgent] Fetched real Jira data ({sprint_data.get('total', 0)} issues)")
-    except Exception as e:
-        logger.info(f"[SprintAgent] Jira fetch failed: {e}. Using demo data as LLM input.")
-        sprint_data = load_demo_jira_issues()
-        source = "demo"
+    # Stage 1: Use pre-fetched data or fetch (real Jira or demo fallback)
+    if jira_data:
+        sprint_data = jira_data
+        source = "pre-fetched"
+        logger.info(f"[SprintAgent] Using pre-fetched Jira data ({sprint_data.get('total', 0)} issues)")
+    else:
+        try:
+            jira = JiraService()
+            sprint_data = await jira.get_sprint_issues(project_key, sprint_id)
+            source = "jira"
+            logger.info(f"[SprintAgent] Fetched real Jira data ({sprint_data.get('total', 0)} issues)")
+        except Exception as e:
+            logger.info(f"[SprintAgent] Jira fetch failed: {e}. Using demo data as LLM input.")
+            sprint_data = load_demo_jira_issues()
+            source = "demo"
 
     # Stage 2: LLM analysis
     try:

@@ -102,35 +102,45 @@ async def run_risk_agent(
     project_key: str,
     github_repo: str | None = None,
     teams_channel: str | None = None,
+    jira_data: dict | None = None,
+    github_data: dict | list | None = None,
+    teams_data: list | None = None,
 ) -> RiskAnalysis:
     logger.info(f"[RiskAgent] Detecting risks for project {project_key}")
 
-    # Stage 1: Fetch data (real services or demo fallback)
-    try:
-        jira = JiraService()
-        jira_data = await jira.get_sprint_issues(project_key)
+    # Stage 1: Use pre-fetched data or fetch (real services or demo fallback)
+    if jira_data is not None:
+        _jira_data = jira_data
+        _github_data = github_data or {}
+        _teams_data = teams_data or []
+        source = "pre-fetched"
+        logger.info("[RiskAgent] Using pre-fetched data from orchestrator")
+    else:
+        try:
+            jira = JiraService()
+            _jira_data = await jira.get_sprint_issues(project_key)
 
-        github_data = {}
-        if github_repo:
-            gh = GitHubService()
-            github_data = {
-                "open_prs": await gh.get_open_prs(github_repo),
-                "issues": await gh.get_repo_issues(github_repo),
-            }
+            _github_data = {}
+            if github_repo:
+                gh = GitHubService()
+                _github_data = {
+                    "open_prs": await gh.get_open_prs(github_repo),
+                    "issues": await gh.get_repo_issues(github_repo),
+                }
 
-        teams_data = []
-        if teams_channel:
-            teams = TeamsService()
-            teams_data = await teams.get_channel_messages(teams_channel, limit=30)
+            _teams_data = []
+            if teams_channel:
+                teams = TeamsService()
+                _teams_data = await teams.get_channel_messages(teams_channel, limit=30)
 
-        source = "real"
-        logger.info("[RiskAgent] Fetched real data from external services")
-    except Exception as e:
-        logger.info(f"[RiskAgent] External fetch failed: {e}. Using demo data as LLM input.")
-        jira_data = load_demo_jira_issues()
-        github_data = load_demo_github_prs()
-        teams_data = load_demo_teams_messages()
-        source = "demo"
+            source = "real"
+            logger.info("[RiskAgent] Fetched real data from external services")
+        except Exception as e:
+            logger.info(f"[RiskAgent] External fetch failed: {e}. Using demo data as LLM input.")
+            _jira_data = load_demo_jira_issues()
+            _github_data = load_demo_github_prs()
+            _teams_data = load_demo_teams_messages()
+            source = "demo"
 
     # Stage 2: LLM analysis
     try:
@@ -138,9 +148,9 @@ async def run_risk_agent(
         logger.info(f"[RiskAgent] Attempting LLM analysis (source: {source})")
         chain = RISK_PROMPT | llm
         result = await chain.ainvoke({
-            "jira_data": json.dumps(jira_data, default=str),
-            "github_data": json.dumps(github_data, default=str),
-            "teams_data": json.dumps(teams_data, default=str),
+            "jira_data": json.dumps(_jira_data, default=str),
+            "github_data": json.dumps(_github_data, default=str),
+            "teams_data": json.dumps(_teams_data, default=str),
         })
         parsed = parse_llm_json(result.content)
         analysis = RiskAnalysis(**parsed)

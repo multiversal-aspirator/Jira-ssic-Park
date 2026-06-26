@@ -350,7 +350,7 @@ export default function App() {
     }
   };
 
-  const jiraUrl = form.project_key ? `https://hackathon-gep.atlassian.net/jira/software/projects/${form.project_key}/boards` : null;
+  const jiraUrl = form.project_key ? `https://hackathon-gep.atlassian.net/jira/software/projects/${form.project_key}/boards/1` : null;
   const githubUrl = form.github_repo ? `https://github.com/${form.github_repo}` : null;
   const githubPRs = form.github_repo ? `https://github.com/${form.github_repo}/pulls` : null;
 

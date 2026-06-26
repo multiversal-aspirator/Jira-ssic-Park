@@ -64,19 +64,25 @@ def _build_demo_delivery_forecast(sprint_analysis: SprintAnalysis | None = None)
 async def run_forecasting_agent(
     project_key: str,
     sprint_analysis: SprintAnalysis | None = None,
+    jira_data: dict | None = None,
 ) -> DeliveryForecast:
     logger.info(f"[ForecastingAgent] Forecasting delivery for project {project_key}")
 
-    # Stage 1: Fetch historical data (real Jira or demo fallback)
-    try:
-        jira = JiraService()
-        historical_data = await jira.get_sprint_issues(project_key)
-        source = "jira"
-        logger.info("[ForecastingAgent] Fetched real historical data from Jira")
-    except Exception as e:
-        logger.info(f"[ForecastingAgent] Jira fetch failed: {e}. Using demo data as LLM input.")
-        historical_data = load_demo_jira_issues()
-        source = "demo"
+    # Stage 1: Use pre-fetched data or fetch historical data (real Jira or demo fallback)
+    if jira_data is not None:
+        historical_data = jira_data
+        source = "pre-fetched"
+        logger.info("[ForecastingAgent] Using pre-fetched Jira data from orchestrator")
+    else:
+        try:
+            jira = JiraService()
+            historical_data = await jira.get_sprint_issues(project_key)
+            source = "jira"
+            logger.info("[ForecastingAgent] Fetched real historical data from Jira")
+        except Exception as e:
+            logger.info(f"[ForecastingAgent] Jira fetch failed: {e}. Using demo data as LLM input.")
+            historical_data = load_demo_jira_issues()
+            source = "demo"
 
     # Stage 2: LLM analysis
     try:

@@ -117,26 +117,34 @@ def _build_demo_dependency_analysis() -> DependencyAnalysis:
 async def run_dependency_agent(
     project_key: str,
     github_repo: str | None = None,
+    jira_data: dict | None = None,
+    github_data: dict | list | None = None,
 ) -> DependencyAnalysis:
     logger.info(f"[DependencyAgent] Tracking dependencies for project {project_key}")
 
-    # Stage 1: Fetch data (real services or demo fallback)
-    try:
-        jira = JiraService()
-        jira_data = await jira.get_sprint_issues(project_key)
+    # Stage 1: Use pre-fetched data or fetch (real services or demo fallback)
+    if jira_data is not None:
+        _jira_data = jira_data
+        _github_data = github_data if isinstance(github_data, list) else (github_data.get("open_prs", []) if isinstance(github_data, dict) else [])
+        source = "pre-fetched"
+        logger.info("[DependencyAgent] Using pre-fetched data from orchestrator")
+    else:
+        try:
+            jira = JiraService()
+            _jira_data = await jira.get_sprint_issues(project_key)
 
-        github_data = []
-        if github_repo:
-            gh = GitHubService()
-            github_data = await gh.get_open_prs(github_repo)
+            _github_data = []
+            if github_repo:
+                gh = GitHubService()
+                _github_data = await gh.get_open_prs(github_repo)
 
-        source = "real"
-        logger.info("[DependencyAgent] Fetched real data from external services")
-    except Exception as e:
-        logger.info(f"[DependencyAgent] External fetch failed: {e}. Using demo data as LLM input.")
-        jira_data = load_demo_jira_issues()
-        github_data = load_demo_github_prs()
-        source = "demo"
+            source = "real"
+            logger.info("[DependencyAgent] Fetched real data from external services")
+        except Exception as e:
+            logger.info(f"[DependencyAgent] External fetch failed: {e}. Using demo data as LLM input.")
+            _jira_data = load_demo_jira_issues()
+            _github_data = load_demo_github_prs()
+            source = "demo"
 
     # Stage 2: LLM analysis
     try:
@@ -144,8 +152,8 @@ async def run_dependency_agent(
         logger.info(f"[DependencyAgent] Attempting LLM analysis (source: {source})")
         chain = DEPENDENCY_PROMPT | llm
         result = await chain.ainvoke({
-            "jira_data": json.dumps(jira_data, default=str),
-            "github_data": json.dumps(github_data, default=str),
+            "jira_data": json.dumps(_jira_data, default=str),
+            "github_data": json.dumps(_github_data, default=str),
         })
         parsed = parse_llm_json(result.content)
         analysis = DependencyAnalysis(**parsed)
