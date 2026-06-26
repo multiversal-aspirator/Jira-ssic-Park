@@ -33,7 +33,7 @@ async def ask_question(request: QuestionRequest):
     if request.project_key:
         query = f"{request.project_key}: {request.question}"
 
-    results = store.search(query, n_results=15)
+    results = store.search(query, n_results=50)
 
     if not results:
         return QuestionResponse(
@@ -50,7 +50,7 @@ async def ask_question(request: QuestionRequest):
     llm = get_chat_model()
     prompt = f"""You are a project intelligence assistant. Answer the user's question based ONLY on the project data provided below.
 
-If the data doesn't contain enough information to answer confidently, say so.
+If the data doesn't contain enough information to answer confidently, say so. Return only plain text output.
 
 PROJECT DATA:
 {context_docs}

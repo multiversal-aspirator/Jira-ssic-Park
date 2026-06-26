@@ -16,11 +16,10 @@ Synthesize them into a clear, concise report suitable for non-technical stakehol
 
 Respond ONLY with valid JSON matching this schema:
 {{
-  "executive_summary": "string (2-3 paragraphs)",
   "key_metrics": {{"metric_name": "value"}},
   "highlights": ["string"],
   "concerns": ["string"],
-  "next_steps": ["string"]
+  "recommendations": ["string"]
 }}"""),
     ("human", "Sprint Analysis:\n{sprint}\n\nRisk Analysis:\n{risks}\n\nDependency Analysis:\n{dependencies}"),
 ])

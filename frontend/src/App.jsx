@@ -371,7 +371,7 @@ export default function App() {
         <span className="gate-vine" />
         <span className="header-dino"><DinoIcon species="trex" accent="#34c759" /></span>
         <div className="header-content">
-          <h1>Jirassic Park</h1>
+          <h1>Jira-ssic Park</h1>
           <p>AI Project Manager Command Center</p>
         </div>
         <span className="header-spacer" />

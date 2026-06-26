@@ -1,6 +1,12 @@
 import DinoIcon from './DinoIcon';
 import { Kpi } from './Visuals';
 
+const formatMetricLabel = (key) =>
+  key
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+ 
+
 export default function ReportCard({ data }) {
   if (!data) return null;
 
@@ -14,7 +20,7 @@ export default function ReportCard({ data }) {
       {data.key_metrics && Object.keys(data.key_metrics).length > 0 && (
         <div className="kpi-row" style={{ marginBottom: '1rem' }}>
           {Object.entries(data.key_metrics).map(([key, val]) => (
-            <Kpi key={key} value={val} label={key} color="#34d27b" />
+            <Kpi key={key} value={val} label={formatMetricLabel(key)} color="#34d27b" />
           ))}
         </div>
       )}
@@ -33,8 +39,8 @@ export default function ReportCard({ data }) {
           <ul className="report-list">{data.concerns?.map((c, i) => <li key={i}>{c}</li>)}</ul>
         </div>
         <div>
-          <h4 style={{ color: '#38bdf8' }}>Next Steps</h4>
-          <ul className="report-list">{data.next_steps?.map((n, i) => <li key={i}>{n}</li>)}</ul>
+          <h4 style={{ color: '#38bdf8' }}>Recommendations</h4>
+          <ul className="report-list">{data.recommendations?.map((r, i) => <li key={i}>{r}</li>)}</ul>
         </div>
       </div>
     </div>
