@@ -80,7 +80,7 @@ async def notes_save(filename: str, content: str) -> str:
 
 
 @mcp.tool()
-def project_search(query: str, collection: str | None = None, limit: int = 10) -> list[dict]:
+def project_search(query: str, collection: str | None = None, limit: int = 50) -> list[dict]:
     """Semantic search across all project knowledge (commits, PRs, tickets, messages, reports)."""
     from app.services.vector_store import get_vector_store
     store = get_vector_store()

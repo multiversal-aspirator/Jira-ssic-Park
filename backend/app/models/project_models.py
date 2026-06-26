@@ -75,11 +75,10 @@ class DependencyAnalysis(BaseModel):
 
 
 class StakeholderReport(BaseModel):
-    executive_summary: str
     key_metrics: dict
     highlights: list[str]
     concerns: list[str]
-    next_steps: list[str]
+    recommendations: list[str]
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

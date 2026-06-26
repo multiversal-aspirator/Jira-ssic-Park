@@ -1,5 +1,14 @@
 import DinoIcon from './DinoIcon';
 import { CircularGauge, Chip } from './Visuals';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 export default function ForecastCard({ data }) {
   if (!data) return null;
@@ -13,6 +22,10 @@ export default function ForecastCard({ data }) {
   const pct = Math.round((data.confidence_score || 0) * 100);
 
   const trendIcon = { improving: '▲', stable: '▬', declining: '▼' }[data.trend] || '▬';
+  const velocitySeries = (data.historical_velocity || []).map((points, idx) => ({
+    sprint: `S${idx + 1}`,
+    points,
+  }));
 
   return (
     <div className="card">
@@ -34,10 +47,31 @@ export default function ForecastCard({ data }) {
       </div>
 
       {data.factors?.length > 0 && (
-        <div className="legend">
-          {data.factors.slice(0, 4).map((f, i) => (
+        <div className="legend forecast-factors">
+          {data.factors.slice(0, 6).map((f, i) => (
             <Chip key={i} tone="neutral">{f}</Chip>
           ))}
+        </div>
+      )}
+
+      {velocitySeries.length > 0 && (
+        <div className="forecast-chart-card">
+          <h4>Velocity Trend</h4>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={velocitySeries} margin={{ top: 6, right: 12, left: -18, bottom: 0 }}>
+              <defs>
+                <linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={meta.color} stopOpacity={0.45} />
+                  <stop offset="95%" stopColor={meta.color} stopOpacity={0.06} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(34, 139, 59, 0.16)" />
+              <XAxis dataKey="sprint" tick={{ fill: '#5a7d62', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#5a7d62', fontSize: 11 }} />
+              <Tooltip formatter={(value) => [value, 'story points']} />
+              <Area type="monotone" dataKey="points" stroke={meta.color} fill="url(#forecastArea)" strokeWidth={2.5} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       )}
     </div>

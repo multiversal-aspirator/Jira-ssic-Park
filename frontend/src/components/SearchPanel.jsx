@@ -6,6 +6,13 @@ export default function SearchPanel({ projectKey }) {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('ask'); // 'ask' or 'search'
+  const [searchLimit, setSearchLimit] = useState(50);
+
+  const switchMode = (nextMode) => {
+    setMode(nextMode);
+    setQuery('');
+    setResults(null);
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -23,7 +30,7 @@ export default function SearchPanel({ projectKey }) {
         setResults({ type: 'answer', data });
       } else {
         const { data } = await axios.get('/api/intelligence/search', {
-          params: { query, limit: 10 },
+          params: { query, limit: searchLimit },
         });
         setResults({ type: 'search', data });
       }
@@ -39,9 +46,24 @@ export default function SearchPanel({ projectKey }) {
       <div className="card">
         <h3>Project Intelligence</h3>
         <div className="search-mode-toggle">
-          <button className={mode === 'ask' ? 'active' : ''} onClick={() => setMode('ask')}>Ask AI</button>
-          <button className={mode === 'search' ? 'active' : ''} onClick={() => setMode('search')}>Semantic Search</button>
+          <button type="button" className={mode === 'ask' ? 'active' : ''} onClick={() => switchMode('ask')}>Ask AI</button>
+          <button type="button" className={mode === 'search' ? 'active' : ''} onClick={() => switchMode('search')}>Semantic Search</button>
         </div>
+        {mode === 'search' && (
+          <div className="search-controls">
+            <label htmlFor="search-limit">Result limit</label>
+            <select
+              id="search-limit"
+              value={searchLimit}
+              onChange={(e) => setSearchLimit(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        )}
         <form onSubmit={handleSearch} className="search-form">
           <input
             type="text"
@@ -64,16 +86,6 @@ export default function SearchPanel({ projectKey }) {
               {results.data.confidence}
             </span>
           </div>
-          {results.data.sources?.length > 0 && (
-            <details>
-              <summary>Sources ({results.data.sources.length})</summary>
-              <ul>
-                {results.data.sources.map((s, i) => (
-                  <li key={i}><small>[{s.collection}]</small> {s.document}</li>
-                ))}
-              </ul>
-            </details>
-          )}
         </div>
       )}
 

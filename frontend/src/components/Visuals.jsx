@@ -5,10 +5,18 @@ export function CircularGauge({ value = 0, size = 120, stroke = 10, label, subla
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (v / 100) * c;
+
   return (
     <div className="gauge" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="gauge-svg">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(34,139,59,0.1)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="rgba(34,139,59,0.1)"
+          strokeWidth={stroke}
+          fill="none"
+        />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -23,29 +31,72 @@ export function CircularGauge({ value = 0, size = 120, stroke = 10, label, subla
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
-      <div className="gauge-center">
-        <span className="gauge-value" style={{ color }}>{label ?? `${Math.round(v)}%`}</span>
-        {sublabel && <span className="gauge-sub">{sublabel}</span>}
+
+      <div
+        className="gauge-center"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.1rem',
+          lineHeight: 1,
+          textAlign: 'center',
+        }}
+      >
+        <span
+          className="gauge-value"
+          style={{
+            color,
+            display: 'block',
+            lineHeight: 1,
+          }}
+        >
+          {label ?? `${Math.round(v)}%`}
+        </span>
+
+        {sublabel && (
+          <span
+            className="gauge-sub"
+            style={{
+              display: 'block',
+              lineHeight: 1,
+              marginTop: '0.1rem',
+            }}
+          >
+            {sublabel}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-export function Donut({ segments = [], size = 130, stroke = 16, centerLabel, centerSub }) {
+export function Donut({ segments = [], size = 100, stroke = 16, centerLabel, centerSub }) {
   const total = segments.reduce((s, x) => s + (x.value || 0), 0) || 1;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   let acc = 0;
+
   return (
     <div className="donut" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(34,139,59,0.1)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="rgba(78, 139, 34, 0.1)"
+          strokeWidth={stroke}
+          fill="none"
+        />
+
         {segments.map((seg, i) => {
           const frac = (seg.value || 0) / total;
           const dash = frac * c;
           const gap = c - dash;
           const off = -acc * c;
           acc += frac;
+
           return (
             <circle
               key={i}
@@ -63,9 +114,41 @@ export function Donut({ segments = [], size = 130, stroke = 16, centerLabel, cen
           );
         })}
       </svg>
-      <div className="gauge-center">
-        <span className="gauge-value">{centerLabel}</span>
-        {centerSub && <span className="gauge-sub">{centerSub}</span>}
+
+      <div
+        className="gauge-center"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.1rem',
+          lineHeight: 1,
+          textAlign: 'center',
+        }}
+      >
+        <span
+          className="gauge-value"
+          style={{
+            display: 'block',
+            lineHeight: 1,
+          }}
+        >
+          {centerLabel}
+        </span>
+
+        {centerSub && (
+          <span
+            className="gauge-sub"
+            style={{
+              display: 'block',
+              lineHeight: 1,
+              marginTop: '0.1rem',
+            }}
+          >
+            {centerSub}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -87,6 +170,7 @@ export function Chip({ children, tone = 'neutral' }) {
 
 export function MiniBar({ value = 0, color = '#34d27b', height = 8 }) {
   const v = Math.min(100, Math.max(0, value || 0));
+
   return (
     <div className="minibar" style={{ height }}>
       <div className="minibar-fill" style={{ width: `${v}%`, background: color }} />

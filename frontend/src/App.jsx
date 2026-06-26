@@ -7,12 +7,13 @@ import DependencyCard from './components/DependencyCard';
 import ReportCard from './components/ReportCard';
 import ForecastCard from './components/ForecastCard';
 import TeamCard from './components/TeamCard';
-import EventFeed from './components/EventFeed';
 import SearchPanel from './components/SearchPanel';
 import ProjectManager from './components/ProjectManager';
 import AgentGrid from './components/AgentGrid';
 import DinoIcon from './components/DinoIcon';
 import { Kpi } from './components/Visuals';
+import OverviewPulse from './components/OverviewPulse';
+import TabSummaryStrip from './components/TabSummaryStrip';
 
 const API_BASE = '/api';
 
@@ -523,12 +524,15 @@ export default function App() {
         ))}
       </nav>
 
+      <TabSummaryStrip tab={tab} report={report} teamData={teamData} />
+
       {tab === 'overview' && (
         <>
           <AgentGrid agents={agents} />
           {report && (
             <>
               <HealthScore score={report.health_score} evidence={report.evidence_summary} />
+              <OverviewPulse report={report} />
               <div className="summary-strip">
                 {report.sprint_analysis && (
                   <Kpi value={`${Math.round(report.sprint_analysis.completion_percentage || 0)}%`} label="Sprint Done" color="#2e7d32" icon="🦕" />
@@ -575,7 +579,6 @@ export default function App() {
           {report?.delivery_forecast && <ForecastCard data={report.delivery_forecast} />}
           {report?.stakeholder_report && <ReportCard data={report.stakeholder_report} />}
           {!report && <div className="card"><p style={{ color: '#5a7d62' }}>Run an analysis to generate reports.</p></div>}
-          {report && <EventFeed events={events} />}
         </>
       )}
 

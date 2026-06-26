@@ -53,9 +53,9 @@ export default function SprintCard({ data, jiraUrl }) {
       </div>
 
       <div className="kpi-row">
-        <Kpi value={total} label="Issues" />
+        <Kpi value={total} label="Issues" color="#f3a807" />
         <Kpi value={completed} label="Completed" color="#2e7d32" />
-        <Kpi value={blocked} label="Blocked" color={blocked ? '#d32f2f' : '#8fa898'} />
+        <Kpi value={blocked} label="Blocked" color="#d32f2f" />
       </div>
 
       {jiraUrl && (

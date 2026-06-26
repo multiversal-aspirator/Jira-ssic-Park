@@ -17,7 +17,6 @@ class QuestionRequest(BaseModel):
 
 class QuestionResponse(BaseModel):
     answer: str
-    sources: list[dict]
     confidence: str
 
 
@@ -39,7 +38,6 @@ async def ask_question(request: QuestionRequest):
         return QuestionResponse(
             answer="I don't have enough project data to answer this question. "
                    "Please ensure data has been ingested via webhooks or manual sync.",
-            sources=[],
             confidence="low",
         )
 
@@ -63,7 +61,6 @@ Respond with a clear, concise answer. Reference specific tickets, PRs, or messag
 
     return QuestionResponse(
         answer=response.content,
-        sources=[{"document": r["document"][:200], "collection": r["collection"]} for r in results[:5]],
         confidence="high" if len(results) >= 5 else "medium" if len(results) >= 2 else "low",
     )
 
@@ -128,7 +125,7 @@ async def get_events(limit: int = 50):
 
 
 @router.get("/search")
-async def semantic_search(query: str, collection: str | None = None, limit: int = 10):
+async def semantic_search(query: str, collection: str | None = None, limit: int = 50):
     """Perform semantic search across the vector store."""
     store = get_vector_store()
     results = store.search(query, collection_name=collection, n_results=limit)

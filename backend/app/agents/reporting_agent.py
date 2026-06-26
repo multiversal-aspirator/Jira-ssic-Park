@@ -1,4 +1,3 @@
-import json
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from app.services.llm_service import get_chat_model, parse_llm_json
@@ -33,25 +32,11 @@ def _build_demo_stakeholder_report(
     """Build StakeholderReport from available agent outputs or demo defaults."""
     logger.info("[ReportingAgent] ⚡ Using DEMO FALLBACK data")
 
-    sprint_summary = sprint.summary if sprint else "Sprint data unavailable"
-    risk_summary = risks.summary if risks else "Risk data unavailable"
-    dep_summary = dependencies.summary if dependencies else "Dependency data unavailable"
-
     completion = f"{sprint.completion_percentage:.0f}%" if sprint else "50%"
     risk_level = risks.overall_risk_level.value if risks else "high"
     num_blockers = len(dependencies.conflicts) if dependencies else 2
 
     return StakeholderReport(
-        executive_summary=(
-            f"Sprint 21 is currently at risk with {completion} completion rate. "
-            f"The overall risk level is {risk_level} due to an unresolved third-party SDK dependency "
-            f"that is blocking the payment integration critical path.\n\n"
-            f"The authentication module was successfully delivered ahead of schedule, "
-            f"and CI/CD infrastructure is fully operational. However, the payment gateway work — "
-            f"the sprint's primary goal — remains blocked by intermittent 503 errors from the provider SDK.\n\n"
-            f"Recommendation: carry over blocked items to Sprint 22, focus remaining effort on "
-            f"completing in-progress items, and escalate the provider support ticket."
-        ),
         key_metrics={
             "sprint_completion": completion,
             "story_points_delivered": "15/40",
@@ -71,7 +56,7 @@ def _build_demo_stakeholder_report(
             "Zero test coverage on payment flow increases regression risk",
             "3 items likely to carry over to next sprint",
         ],
-        next_steps=[
+        recommendations=[
             "Escalate payment provider support ticket to account manager",
             "Implement circuit-breaker pattern as SDK workaround",
             "Carry over DEMO-106 and DEMO-110 to Sprint 22",

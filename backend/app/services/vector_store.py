@@ -214,7 +214,7 @@ class VectorStore:
         }
         self.reports.upsert(ids=[doc_id], documents=[content], metadatas=[metadata])
 
-    def search(self, query: str, collection_name: str | None = None, n_results: int = 10) -> list[dict]:
+    def search(self, query: str, collection_name: str | None = None, n_results: int = 50) -> list[dict]:
         """Semantic search across one or all collections."""
         results = []
 
