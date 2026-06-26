@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from app.services.vector_store import get_vector_store
-from app.services.llm_service import get_chat_model, parse_llm_json
+from app.services.llm_service import get_chat_model
 from app.services.event_processor import get_event_log, get_queue_status
 from app.utils.logger import get_logger
 
@@ -81,9 +81,9 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
         from app.services.jira_service import JiraService
         jira = JiraService()
         data = await jira.get_sprint_issues(project_key)
-        for issue in data.get("issues", []):
-            store.ingest_jira_issue(project_key, issue)
-            synced["jira"] += 1
+        issues = data.get("issues", [])
+        store.ingest_jira_issues_batch(project_key, issues)
+        synced["jira"] = len(issues)
     except Exception as e:
         logger.warning(f"[Sync] Jira sync failed: {e}")
 
@@ -93,9 +93,8 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
             from app.services.github_service import GitHubService
             gh = GitHubService()
             prs = await gh.get_open_prs(github_repo)
-            for pr in prs:
-                store.ingest_pr(github_repo, pr)
-                synced["github"] += 1
+            store.ingest_prs_batch(github_repo, prs)
+            synced["github"] = len(prs)
         except Exception as e:
             logger.warning(f"[Sync] GitHub sync failed: {e}")
 
@@ -105,11 +104,10 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
         teams = TeamsService()
         channel = teams_channel or "local"
         messages = await teams.get_channel_messages(channel, limit=100)
-        for msg in messages:
-            store.ingest_teams_message(channel, msg)
-            synced["teams"] += 1
+        store.ingest_teams_messages_batch(channel, messages)
+        synced["teams"] = len(messages)
 
-        # Also sync transcripts
+        # Also sync transcripts (transcripts are chunked — keep individual upsert for correctness)
         transcripts = await teams.get_meeting_transcripts(channel, limit=10)
         for tr in transcripts:
             store.ingest_teams_transcript(channel, tr)

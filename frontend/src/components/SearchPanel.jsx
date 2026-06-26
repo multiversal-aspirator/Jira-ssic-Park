@@ -49,7 +49,7 @@ export default function SearchPanel({ projectKey }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={mode === 'ask' ? 'Ask a question about your project...' : 'Search project knowledge...'}
           />
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading} aria-label={loading ? 'Loading results' : mode === 'ask' ? 'Ask question' : 'Search'}>
             {loading ? '...' : mode === 'ask' ? 'Ask' : 'Search'}
           </button>
         </form>
@@ -60,7 +60,7 @@ export default function SearchPanel({ projectKey }) {
           <h3>Answer</h3>
           <p className="ai-answer">{results.data.answer}</p>
           <div className="confidence-badge">
-            Confidence: <span className={`badge badge-${results.data.confidence === 'high' ? 'low' : results.data.confidence === 'medium' ? 'medium' : 'high'}`}>
+            Confidence: <span className={`badge badge-confidence-${results.data.confidence}`}>
               {results.data.confidence}
             </span>
           </div>

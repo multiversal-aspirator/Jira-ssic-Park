@@ -1,8 +1,13 @@
+import logging
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from app.utils.logger import get_logger
+
+# Suppress the noisy "No ONNX providers provided" debug warning from ChromaDB's
+# default embedding function — it fires once per upsert/query otherwise.
+logging.getLogger("chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2").setLevel(logging.WARNING)
 
 logger = get_logger(__name__)
 
@@ -40,7 +45,8 @@ class VectorStore:
         }
         self.commits.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
 
-    def ingest_pr(self, repo: str, pr: dict):
+    def _normalize_pr(self, repo: str, pr: dict) -> tuple[str, str, dict]:
+        """Return (doc_id, text, metadata) from a GitHub PR dict."""
         doc_id = f"{repo}:pr-{pr.get('number', 0)}"
         text = f"[{repo}] PR #{pr.get('number')}: {pr.get('title', '')} - {pr.get('body', '')[:500]}"
         metadata = {
@@ -51,13 +57,31 @@ class VectorStore:
             "created_at": pr.get("created_at", ""),
             "type": "pull_request",
         }
+        return doc_id, text, metadata
+
+    def ingest_pr(self, repo: str, pr: dict):
+        """Ingest a single PR. Prefer ingest_prs_batch for multiple PRs."""
+        doc_id, text, metadata = self._normalize_pr(repo, pr)
         self.pull_requests.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
 
-    def ingest_jira_issue(self, project_key: str, issue: dict):
+    def ingest_prs_batch(self, repo: str, prs: list[dict]):
+        """Ingest multiple GitHub PRs in a single ChromaDB call."""
+        if not prs:
+            return
+        ids, documents, metadatas = [], [], []
+        for pr in prs:
+            doc_id, text, metadata = self._normalize_pr(repo, pr)
+            ids.append(doc_id)
+            documents.append(text)
+            metadatas.append(metadata)
+        self.pull_requests.upsert(ids=ids, documents=documents, metadatas=metadatas)
+        logger.info(f"[VectorStore] Batch-ingested {len(ids)} PRs for repo {repo}")
+
+    def _normalize_jira_issue_fields(self, project_key: str, issue: dict) -> tuple[str, str, dict]:
+        """Return (doc_id, text, metadata) from either a raw or normalized Jira issue dict."""
         key = issue.get("key", "")
-        # Support both raw Jira payload and normalized payload
         if isinstance(issue.get("fields"), dict):
-            fields = issue.get("fields", {})
+            fields = issue["fields"]
             summary = fields.get("summary", "") or ""
             status = (fields.get("status") or {}).get("name", "Unknown") or "Unknown"
             assignee = ((fields.get("assignee") or {}).get("displayName")) or "Unassigned"
@@ -68,9 +92,9 @@ class VectorStore:
             assignee = issue.get("assignee", "Unassigned") or "Unassigned"
             priority = issue.get("priority", "None") or "None"
 
-            doc_id = f"{project_key}:{key}"
-            text = f"[{key}] {summary} | Status: {status} | Assignee: {assignee} | Priority: {priority}"
-            metadata = {
+        doc_id = f"{project_key}:{key}"
+        text = f"[{key}] {summary} | Status: {status} | Assignee: {assignee} | Priority: {priority}"
+        metadata = {
             "project": project_key,
             "key": key,
             "status": str(status),
@@ -78,14 +102,33 @@ class VectorStore:
             "priority": str(priority),
             "type": "jira_issue",
         }
+        return doc_id, text, metadata
+
+    def ingest_jira_issue(self, project_key: str, issue: dict):
+        """Ingest a single Jira issue. Prefer ingest_jira_issues_batch for multiple issues."""
+        doc_id, text, metadata = self._normalize_jira_issue_fields(project_key, issue)
         self.jira_tickets.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
 
-    def ingest_teams_message(self, channel: str, message: dict):
-        # Generate stable ID from content for deduplication
+    def ingest_jira_issues_batch(self, project_key: str, issues: list[dict]):
+        """Ingest multiple Jira issues in a single ChromaDB call (much faster than N individual upserts)."""
+        if not issues:
+            return
+        # Deduplicate by doc_id (last write wins for same key)
+        seen: dict[str, tuple[str, dict]] = {}
+        for issue in issues:
+            doc_id, text, metadata = self._normalize_jira_issue_fields(project_key, issue)
+            seen[doc_id] = (text, metadata)
+        ids = list(seen.keys())
+        documents = [v[0] for v in seen.values()]
+        metadatas = [v[1] for v in seen.values()]
+        self.jira_tickets.upsert(ids=ids, documents=documents, metadatas=metadatas)
+        logger.info(f"[VectorStore] Batch-ingested {len(ids)} Jira issues for project {project_key}")
+
+    def _normalize_teams_message(self, channel: str, message: dict) -> tuple[str, str, dict]:
+        """Return (doc_id, text, metadata) from a Teams message dict."""
         msg_id = message.get("id") or f"{message.get('day','')}-{message.get('timestamp','')}-{message.get('speaker','')}"
         doc_id = f"{channel}:{msg_id}"
 
-        # Support both Graph API format and local file format
         if "body" in message and isinstance(message.get("body"), dict):
             body = message["body"].get("content", "")
         elif "content" in message:
@@ -107,11 +150,29 @@ class VectorStore:
             "created": message.get("createdDateTime", message.get("created", "")),
             "type": "teams_message",
         }
+        return doc_id, text, metadata
+
+    def ingest_teams_message(self, channel: str, message: dict):
+        """Ingest a single Teams message. Prefer ingest_teams_messages_batch for multiple messages."""
+        doc_id, text, metadata = self._normalize_teams_message(channel, message)
         self.teams_messages.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
+
+    def ingest_teams_messages_batch(self, channel: str, messages: list[dict]):
+        """Ingest multiple Teams messages in a single ChromaDB call."""
+        if not messages:
+            return
+        ids, documents, metadatas = [], [], []
+        for message in messages:
+            doc_id, text, metadata = self._normalize_teams_message(channel, message)
+            ids.append(doc_id)
+            documents.append(text)
+            metadatas.append(metadata)
+        self.teams_messages.upsert(ids=ids, documents=documents, metadatas=metadatas)
+        logger.info(f"[VectorStore] Batch-ingested {len(ids)} Teams messages for channel {channel}")
 
     def ingest_teams_transcript(self, channel: str, transcript: dict):
         """Ingest a meeting transcript into the vector store."""
-        transcript_id = transcript.get("transcript_id", str(datetime.utcnow().timestamp()))
+        transcript_id = transcript.get("transcript_id", str(datetime.now(timezone.utc).timestamp()))
         content = transcript.get("content", "")
 
         # Split long transcripts into chunks for better retrieval
@@ -144,11 +205,11 @@ class VectorStore:
         return chunks if chunks else [text[:max_chars]]
 
     def ingest_report(self, project_key: str, report_type: str, content: str):
-        doc_id = f"{project_key}:{report_type}:{datetime.utcnow().isoformat()}"
+        doc_id = f"{project_key}:{report_type}:{datetime.now(timezone.utc).isoformat()}"
         metadata = {
             "project": project_key,
             "report_type": report_type,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "type": "report",
         }
         self.reports.upsert(ids=[doc_id], documents=[content], metadatas=[metadata])
@@ -158,7 +219,11 @@ class VectorStore:
         results = []
 
         if collection_name:
-            collections = [self.client.get_collection(collection_name)]
+            try:
+                collections = [self.client.get_collection(collection_name)]
+            except Exception:
+                logger.warning(f"[VectorStore] Collection '{collection_name}' not found — returning empty results")
+                return []
         else:
             collections = [
                 self.commits, self.pull_requests, self.jira_tickets,

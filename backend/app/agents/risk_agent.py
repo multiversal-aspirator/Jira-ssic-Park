@@ -1,7 +1,6 @@
 import json
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
-from app.core.config import get_settings
 from app.services.jira_service import JiraService
 from app.services.github_service import GitHubService
 from app.services.teams_service import TeamsService
@@ -50,8 +49,8 @@ def _build_demo_risk_analysis() -> RiskAnalysis:
     prs = load_demo_github_prs()
     messages = load_demo_teams_messages()
 
-    blocked_issues = [i for i in jira.get("issues", []) if i["status"] == "Blocked"]
-    stale_prs = [p for p in prs if p["status"] == "open" and p["open_days"] > 5]
+    blocked_issues = [i for i in jira.get("issues", []) if i.get("status", "") == "Blocked"]
+    stale_prs = [p for p in prs if p.get("status", "") == "open" and p.get("open_days", 0) > 5]
     failing_prs = [p for p in prs if p.get("failing_checks")]
 
     risks = [

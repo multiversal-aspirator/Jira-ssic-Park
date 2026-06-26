@@ -1,7 +1,6 @@
 import json
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
-from app.core.config import get_settings
 from app.services.jira_service import JiraService
 from app.services.github_service import GitHubService
 from app.services.llm_service import get_chat_model, parse_llm_json
@@ -36,11 +35,8 @@ Respond ONLY with valid JSON matching this schema:
 
 
 def _build_demo_dependency_analysis() -> DependencyAnalysis:
-    """Build DependencyAnalysis from local demo data."""
+    """Build DependencyAnalysis from hardcoded demo data."""
     logger.info("[DependencyAgent] ⚡ Using DEMO FALLBACK data")
-    jira = load_demo_jira_issues()
-    prs = load_demo_github_prs()
-
     dependencies = [
         Dependency(
             source_issue="DEMO-102",

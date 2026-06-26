@@ -1,7 +1,6 @@
 import json
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
-from app.core.config import get_settings
 from app.services.llm_service import get_chat_model, parse_llm_json
 from app.models.project_models import StakeholderReport, SprintAnalysis, RiskAnalysis, DependencyAnalysis
 from app.utils.logger import get_logger

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -80,7 +80,7 @@ class StakeholderReport(BaseModel):
     highlights: list[str]
     concerns: list[str]
     next_steps: list[str]
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class DeliveryForecast(BaseModel):
@@ -104,6 +104,6 @@ class ProjectHealthReport(BaseModel):
     dependency_analysis: Optional[DependencyAnalysis] = None
     stakeholder_report: Optional[StakeholderReport] = None
     delivery_forecast: Optional[DeliveryForecast] = None
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     evidence_summary: list[str] = Field(default_factory=list)
     agent_trace: list[str] = Field(default_factory=list, description="Execution trace of agent workflow steps")

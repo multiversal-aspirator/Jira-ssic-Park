@@ -1109,6 +1109,10 @@ body::after {
 }
 .ai-answer { white-space: pre-wrap; line-height: 1.7; color: var(--text); }
 .confidence-badge { margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-mid); }
+.badge { display: inline-block; padding: 0.15em 0.6em; border-radius: 999px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-confidence-high  { background: rgba(52, 210, 123, 0.15); color: #34d27b; border: 1px solid rgba(52, 210, 123, 0.3); }
+.badge-confidence-medium { background: rgba(224, 165, 42, 0.15); color: #e0a52a; border: 1px solid rgba(224, 165, 42, 0.3); }
+.badge-confidence-low   { background: rgba(229, 86, 75, 0.15);  color: #e5564b; border: 1px solid rgba(229, 86, 75, 0.3); }
 .search-results li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
 .search-collection { color: var(--jungle); margin-right: 0.5rem; font-size: 0.75rem; font-weight: 600; }
 details summary { cursor: pointer; color: var(--text-mid); font-size: 0.85rem; margin-top: 0.8rem; }

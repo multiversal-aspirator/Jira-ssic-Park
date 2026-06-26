@@ -36,21 +36,19 @@ class JiraService:
 
     def _is_blocked(self, fields: dict) -> bool:
         status_name = (fields.get("status") or {}).get("name", "").lower()
-        priority_name = (fields.get("priority") or {}).get("name", "").lower()
 
+        # Blocked status check
         if "block" in status_name:
             return True
 
-        if priority_name in {"blocker", "highest"}:
-            return True
-
+        # Explicit blocking issue links only (not priority-based)
         for link in fields.get("issuelinks", []) or []:
             link_type = (link.get("type") or {}).get("name", "").lower()
             inward = (link.get("type") or {}).get("inward", "").lower()
             outward = (link.get("type") or {}).get("outward", "").lower()
 
             link_text = f"{link_type} {inward} {outward}"
-            if "block" in link_text:
+            if "block" in link_text and link.get("inwardIssue"):  # inwardIssue means something blocks THIS issue
                 return True
 
         return False
@@ -139,10 +137,10 @@ class JiraService:
         sprint_id: str | None = None,
         epic_key: str | None = None,
     ) -> dict:
-        jql = f"project = {project_key}"
-
+        # Quote values to prevent JQL injection
+        jql = f'project = "{project_key}"'
         if sprint_id:
-            jql += f" AND sprint = {sprint_id}"
+            jql += f' AND sprint = "{sprint_id}"'
         else:
             jql += " AND sprint in openSprints()"
 

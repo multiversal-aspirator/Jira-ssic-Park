@@ -1,7 +1,7 @@
 """Background event processor — updates knowledge base and triggers re-analysis when events arrive."""
 import asyncio
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,7 +16,7 @@ async def process_event(event_type: str, data: dict):
     event = {
         "type": event_type,
         "data": data,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "processed": False,
     }
     _event_queue.append(event)

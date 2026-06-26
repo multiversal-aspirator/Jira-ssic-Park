@@ -1,7 +1,7 @@
 import json
+from datetime import date, timedelta
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
-from app.core.config import get_settings
 from app.services.jira_service import JiraService
 from app.services.llm_service import get_chat_model, parse_llm_json
 from app.services.demo_data_service import load_demo_jira_issues
@@ -41,7 +41,7 @@ def _build_demo_delivery_forecast(sprint_analysis: SprintAnalysis | None = None)
     historical = jira.get("historical_velocity", [38, 42, 35, 40, 37])
 
     return DeliveryForecast(
-        predicted_completion_date="2026-06-22",
+        predicted_completion_date=(date.today() + timedelta(days=4)).isoformat(),
         confidence_score=0.55,
         completion_likelihood="medium",
         historical_velocity=[float(v) for v in historical],

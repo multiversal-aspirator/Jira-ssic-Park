@@ -105,9 +105,7 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
 
     sprint_name = (
         sprint_data.get("sprint_name")
-        or f"Sprint {sprint_data.get('sprint_id')}"
-        if sprint_data.get("sprint_id")
-        else "Current Sprint"
+        or (f"Sprint {sprint_data.get('sprint_id')}" if sprint_data.get("sprint_id") else "Current Sprint")
     )
 
     return SprintAnalysis(
