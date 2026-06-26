@@ -57,6 +57,14 @@ const WORKFLOW_STAGES = {
   ],
 };
 
+const emptyForm = {
+  project_key: '',
+  sprint_id: '',
+  epic_key: '',
+  github_repo: '',
+  teams_channel: '',
+};
+
 const idleAgents = () =>
   AGENT_DEFS.map((a) => ({ ...a, status: 'idle', progress: 0 }));
 
@@ -85,13 +93,17 @@ function getWorkflowProgress(agentId, elapsed) {
   return stages[stages.length - 1].end;
 }
 
+function epicDisplayValue(epic) {
+  return `${epic.summary} (${epic.key})`;
+}
+
 export default function App() {
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem('pm_projects');
     return saved ? JSON.parse(saved) : [];
   });
   const [activeProject, setActiveProject] = useState(null);
-  const [form, setForm] = useState({ project_key: '', sprint_id: '', github_repo: '', teams_channel: '' });
+  const [form, setForm] = useState(emptyForm);
   const [report, setReport] = useState(null);
   const [teamData, setTeamData] = useState(null);
   const [events, setEvents] = useState([]);
@@ -101,12 +113,46 @@ export default function App() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('overview');
 
+  const [epics, setEpics] = useState([]);
+  const [epicsLoading, setEpicsLoading] = useState(false);
+  const [epicsError, setEpicsError] = useState(null);
+
   const [agents, setAgents] = useState(idleAgents);
   const tickRef = useRef(null);
   const completionTimersRef = useRef([]);
 
-  useEffect(() => { localStorage.setItem('pm_projects', JSON.stringify(projects)); }, [projects]);
-  useEffect(() => { if (activeProject) setForm(activeProject); }, [activeProject]);
+  useEffect(() => {
+    localStorage.setItem('pm_projects', JSON.stringify(projects));
+  }, [projects]);
+
+  useEffect(() => {
+    if (activeProject) setForm({ ...emptyForm, ...activeProject });
+  }, [activeProject]);
+
+  useEffect(() => {
+    const projectKey = form.project_key.trim();
+
+    setEpics([]);
+    setEpicsError(null);
+
+    if (!projectKey) return;
+
+    const timer = setTimeout(async () => {
+      setEpicsLoading(true);
+      try {
+        const { data } = await axios.get(`${API_BASE}/project/epics`, {
+          params: { project_key: projectKey },
+        });
+        setEpics(data.epics || []);
+      } catch (err) {
+        setEpicsError(err.response?.data?.detail || err.message);
+      } finally {
+        setEpicsLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [form.project_key]);
 
   useEffect(() => {
     if (!loading) {
@@ -186,14 +232,28 @@ export default function App() {
     setProjects(projects.filter(p => p.project_key !== projectKey));
     if (activeProject?.project_key === projectKey) {
       setActiveProject(null);
-      setForm({ project_key: '', sprint_id: '', github_repo: '', teams_channel: '' });
+      setForm(emptyForm);
       setReport(null);
       setTeamData(null);
       setAgents(idleAgents());
     }
   };
 
-  const handleChange = (e) => { setForm({ ...form, [e.target.name]: e.target.value }); };
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const getSelectedEpicKey = () => {
+    const value = (form.epic_key || '').trim();
+
+    if (!value) return '';
+
+    const matchedEpic = epics.find(
+      (epic) => epicDisplayValue(epic) === value || epic.key === value
+    );
+
+    return matchedEpic ? matchedEpic.key : value;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -208,21 +268,27 @@ export default function App() {
       const payload = {
         project_key: form.project_key,
         sprint_id: form.sprint_id || null,
+        epic_key: getSelectedEpicKey() || null,
         github_repo: form.github_repo || null,
         teams_channel: form.teams_channel || null,
         include_forecasting: true,
       };
+
       const { data } = await axios.post(`${API_BASE}/project/analyze`, payload);
       setReport(data);
       saveProject({ ...form });
 
       try {
-        const teamRes = await axios.get(`${API_BASE}/team/overview`, { params: { project_key: form.project_key } });
+        const teamRes = await axios.get(`${API_BASE}/team/overview`, {
+          params: { project_key: form.project_key },
+        });
         setTeamData(teamRes.data);
       } catch (e) { /* optional */ }
 
       try {
-        const evtRes = await axios.get(`${API_BASE}/intelligence/events`, { params: { limit: 20 } });
+        const evtRes = await axios.get(`${API_BASE}/intelligence/events`, {
+          params: { limit: 20 },
+        });
         setEvents(evtRes.data.events || []);
       } catch (e) { /* optional */ }
 
@@ -238,20 +304,26 @@ export default function App() {
     if (!form.project_key.trim()) return;
     setSyncing(true);
     setSyncStatus(null);
+
     try {
       const params = { project_key: form.project_key };
       if (form.github_repo) params.github_repo = form.github_repo;
       if (form.teams_channel) params.teams_channel = form.teams_channel;
+
       const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params });
       setSyncStatus(data);
 
       try {
-        const teamRes = await axios.get(`${API_BASE}/team/overview`, { params: { project_key: form.project_key } });
+        const teamRes = await axios.get(`${API_BASE}/team/overview`, {
+          params: { project_key: form.project_key },
+        });
         setTeamData(teamRes.data);
       } catch (e) { /* optional */ }
 
       try {
-        const evtRes = await axios.get(`${API_BASE}/intelligence/events`, { params: { limit: 20 } });
+        const evtRes = await axios.get(`${API_BASE}/intelligence/events`, {
+          params: { limit: 20 },
+        });
         setEvents(evtRes.data.events || []);
       } catch (e) { /* optional */ }
     } catch (err) {
@@ -334,21 +406,73 @@ export default function App() {
         <div className="form-grid">
           <div className="form-group">
             <label htmlFor="project_key">Jira Project Key *</label>
-            <input id="project_key" name="project_key" value={form.project_key} onChange={handleChange} placeholder="e.g. PROJ" required />
+            <input
+              id="project_key"
+              name="project_key"
+              value={form.project_key}
+              onChange={handleChange}
+              placeholder="e.g. SCRUM"
+              required
+            />
           </div>
+
           <div className="form-group">
             <label htmlFor="sprint_id">Sprint ID</label>
-            <input id="sprint_id" name="sprint_id" value={form.sprint_id} onChange={handleChange} placeholder="optional" />
+            <input
+              id="sprint_id"
+              name="sprint_id"
+              value={form.sprint_id}
+              onChange={handleChange}
+              placeholder="optional"
+            />
           </div>
+
+          <div className="form-group">
+            <label htmlFor="epic_key">Epic</label>
+            <input
+              id="epic_key"
+              name="epic_key"
+              list="epic-options"
+              value={form.epic_key}
+              onChange={handleChange}
+              placeholder={epicsLoading ? 'Loading epics...' : 'Type or choose epic'}
+              disabled={!form.project_key.trim() || epicsLoading}
+            />
+            <datalist id="epic-options">
+              {epics.map((epic) => (
+                <option key={epic.key} value={epicDisplayValue(epic)} />
+              ))}
+            </datalist>
+            {epicsError && (
+              <small className="field-error">
+                Could not load epics: {epicsError}
+              </small>
+            )}
+          </div>
+
           <div className="form-group">
             <label htmlFor="github_repo">GitHub Repo</label>
-            <input id="github_repo" name="github_repo" value={form.github_repo} onChange={handleChange} placeholder="owner/repo" />
+            <input
+              id="github_repo"
+              name="github_repo"
+              value={form.github_repo}
+              onChange={handleChange}
+              placeholder="owner/repo"
+            />
           </div>
+
           <div className="form-group">
             <label htmlFor="teams_channel">Teams Channel</label>
-            <input id="teams_channel" name="teams_channel" value={form.teams_channel} onChange={handleChange} placeholder="channel-id" />
+            <input
+              id="teams_channel"
+              name="teams_channel"
+              value={form.teams_channel}
+              onChange={handleChange}
+              placeholder="channel-id"
+            />
           </div>
         </div>
+
         <div className="form-actions">
           <button className="btn-analyze" type="submit" disabled={loading}>
             {loading ? 'Releasing agents…' : '🦖 Release the Agents'}
@@ -365,6 +489,7 @@ export default function App() {
             </button>
           )}
         </div>
+
         {syncStatus && (
           <div className={`sync-status ${syncStatus.error ? 'error' : ''}`}>
             {syncStatus.error

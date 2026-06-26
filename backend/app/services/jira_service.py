@@ -82,6 +82,7 @@ class JiraService:
         response: dict,
         project_key: str,
         sprint_id: str | None,
+        epic_key: str | None,
         jql: str,
     ) -> dict:
         raw_issues = response.get("issues", []) or []
@@ -91,6 +92,7 @@ class JiraService:
             "source": "jira",
             "project_key": project_key,
             "sprint_id": sprint_id,
+            "epic_key": epic_key,
             "jql": jql,
             "total": response.get("total", len(normalized_issues)),
             "max_results": response.get("maxResults"),
@@ -98,16 +100,54 @@ class JiraService:
             "issues": normalized_issues,
         }
 
+    async def get_project_epics(self, project_key: str) -> list[dict]:
+        jql = f'project = {project_key} AND issuetype = Epic ORDER BY created DESC'
+
+        logger.info(f"Fetching Jira epics: {jql}")
+
+        response = await self._request(
+            "GET",
+            "search/jql",
+            params={
+                "jql": jql,
+                "maxResults": 100,
+                "fields": "summary,status,created,updated",
+            },
+        )
+
+        epics = []
+        for issue in response.get("issues", []) or []:
+            fields = issue.get("fields", {}) or {}
+            status = fields.get("status") or {}
+
+            epics.append(
+                {
+                    "key": issue.get("key", ""),
+                    "summary": fields.get("summary", ""),
+                    "status": status.get("name", "Unknown"),
+                    "created": fields.get("created"),
+                    "updated": fields.get("updated"),
+                }
+            )
+
+        logger.info(f"Fetched {len(epics)} Jira epics for project {project_key}")
+        return epics
+
     async def get_sprint_issues(
         self,
         project_key: str,
         sprint_id: str | None = None,
+        epic_key: str | None = None,
     ) -> dict:
         jql = f"project = {project_key}"
+
         if sprint_id:
             jql += f" AND sprint = {sprint_id}"
         else:
             jql += " AND sprint in openSprints()"
+
+        if epic_key:
+            jql += f" AND parent = {epic_key}"
 
         logger.info(f"Fetching Jira issues: {jql}")
 
@@ -138,6 +178,7 @@ class JiraService:
             response,
             project_key,
             sprint_id,
+            epic_key,
             jql,
         )
 

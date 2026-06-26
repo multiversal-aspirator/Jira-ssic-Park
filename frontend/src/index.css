@@ -249,7 +249,8 @@ body::after {
   text-transform: uppercase;
 }
 
-.form-group input {
+.form-group input,
+.form-group input[list] {
   width: 100%;
   padding: 0.7rem 0.9rem;
   background: var(--bg-warm);
@@ -261,12 +262,25 @@ body::after {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.form-group input[list] {
+  cursor: text;
+}
+
 .form-group input::placeholder { color: var(--text-light); }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group input[list]:focus {
   outline: none;
   border-color: var(--jungle);
   box-shadow: 0 0 0 3px rgba(34, 139, 59, 0.12);
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .form-actions { display: flex; gap: 0.8rem; }

@@ -23,6 +23,7 @@ class SprintStatus(str, Enum):
 class ProjectUpdateRequest(BaseModel):
     project_key: str = Field(..., description="Jira project key or identifier")
     sprint_id: Optional[str] = Field(None, description="Specific sprint to analyze")
+    epic_key: Optional[str] = Field(None, description="Optional Jira epic key to filter issues, e.g. SCRUM-36")
     github_repo: Optional[str] = Field(None, description="GitHub repo in owner/repo format")
     teams_channel: Optional[str] = Field(None, description="Microsoft Teams channel for context")
     include_forecasting: bool = Field(True, description="Whether to run delivery forecasting")

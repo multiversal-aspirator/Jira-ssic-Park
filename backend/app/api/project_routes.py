@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.models.project_models import ProjectUpdateRequest, ProjectHealthReport
 from app.orchestrator.workflow import run_project_analysis
+from app.services.jira_service import JiraService
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,6 +17,17 @@ async def analyze_project(request: ProjectUpdateRequest):
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get("/epics")
+async def get_project_epics(project_key: str):
+    try:
+        logger.info(f"Received epics request for project: {project_key}")
+        epics = await JiraService().get_project_epics(project_key)
+        return {"project_key": project_key, "epics": epics}
+    except Exception as e:
+        logger.error(f"Failed to fetch epics for project {project_key}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Jira epics: {str(e)}")
 
 
 @router.get("/health")

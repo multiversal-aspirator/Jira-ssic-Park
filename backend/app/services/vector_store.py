@@ -55,20 +55,27 @@ class VectorStore:
 
     def ingest_jira_issue(self, project_key: str, issue: dict):
         key = issue.get("key", "")
-        fields = issue.get("fields", {})
-        summary = fields.get("summary", "")
-        status = fields.get("status", {}).get("name", "")
-        assignee = (fields.get("assignee") or {}).get("displayName", "Unassigned")
-        priority = (fields.get("priority") or {}).get("name", "")
+        # Support both raw Jira payload and normalized payload
+        if isinstance(issue.get("fields"), dict):
+            fields = issue.get("fields", {})
+            summary = fields.get("summary", "") or ""
+            status = (fields.get("status") or {}).get("name", "Unknown") or "Unknown"
+            assignee = ((fields.get("assignee") or {}).get("displayName")) or "Unassigned"
+            priority = ((fields.get("priority") or {}).get("name")) or "None"
+        else:
+            summary = issue.get("summary", "") or ""
+            status = issue.get("status", "Unknown") or "Unknown"
+            assignee = issue.get("assignee", "Unassigned") or "Unassigned"
+            priority = issue.get("priority", "None") or "None"
 
-        doc_id = f"{project_key}:{key}"
-        text = f"[{key}] {summary} | Status: {status} | Assignee: {assignee} | Priority: {priority}"
-        metadata = {
+            doc_id = f"{project_key}:{key}"
+            text = f"[{key}] {summary} | Status: {status} | Assignee: {assignee} | Priority: {priority}"
+            metadata = {
             "project": project_key,
             "key": key,
-            "status": status,
-            "assignee": assignee,
-            "priority": priority,
+            "status": str(status),
+            "assignee": str(assignee),
+            "priority": str(priority),
             "type": "jira_issue",
         }
         self.jira_tickets.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])

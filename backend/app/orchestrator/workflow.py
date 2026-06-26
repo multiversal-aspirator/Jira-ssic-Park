@@ -61,9 +61,18 @@ def _trace(msg: str) -> str:
 async def load_project_context(state: ProjectState) -> dict:
     """Initialize context and validate request parameters."""
     req = state["request"]
-    logger.info(f"[Orchestrator] load_project_context: project={req.project_key}")
+    logger.info(
+        f"[Orchestrator] load_project_context: project={req.project_key}, "
+        f"sprint={req.sprint_id}, epic={req.epic_key}"
+    )
     return {
-        "agent_trace": [_trace(f"Loaded project context for {req.project_key}")],
+        "agent_trace": [
+            _trace(
+                f"Loaded project context for {req.project_key}"
+                + (f" / sprint {req.sprint_id}" if req.sprint_id else "")
+                + (f" / epic {req.epic_key}" if req.epic_key else "")
+            )
+        ],
     }
 
 
@@ -72,7 +81,7 @@ async def analyze_sprint(state: ProjectState) -> dict:
     req = state["request"]
     logger.info("[Orchestrator] analyze_sprint: Running Sprint Analysis Agent")
     try:
-        result = await run_sprint_agent(req.project_key, req.sprint_id)
+        result = await run_sprint_agent(req.project_key, req.sprint_id, req.epic_key)
     except Exception as e:
         logger.error(f"[Orchestrator] Sprint agent failed: {e}")
         result = None

@@ -128,13 +128,16 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
 
 
 @traceable(name="SprintAgent")
-async def run_sprint_agent(project_key: str, sprint_id: str | None = None) -> SprintAnalysis:
-    logger.info(f"[SprintAgent] Analyzing sprint for project {project_key}")
+async def run_sprint_agent(
+    project_key: str,
+    sprint_id: str | None = None,
+    epic_key: str | None = None,
+) -> SprintAnalysis:
+    logger.info(f"[SprintAgent] Analyzing sprint for project {project_key}, epic={epic_key}")
 
-    # Stage 1: Fetch data (real Jira or demo fallback)
     try:
         jira = JiraService()
-        sprint_data = await jira.get_sprint_issues(project_key, sprint_id)
+        sprint_data = await jira.get_sprint_issues(project_key, sprint_id, epic_key)
         source = "jira"
         logger.info(f"[SprintAgent] Fetched real Jira data ({sprint_data.get('total', 0)} issues)")
     except Exception as e:
