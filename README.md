@@ -27,7 +27,7 @@ Browser (React + Vite)
 FastAPI  (port 8000)
   ├── POST /api/project/analyze      → LangGraph Orchestrator
   ├── POST /api/intelligence/sync    → Batch vector store sync
-  ├── POST /api/intelligence/ask     → RAG Q&A (ChromaDB + GPT-4o)
+  ├── POST /api/intelligence/ask     → RAG Q&A (ChromaDB + OSS 120B)
   ├── GET  /api/intelligence/search  → Semantic search
   ├── GET  /api/team/overview        → Team workload analysis
   └── POST /api/webhooks/{github,jira,teams}  → Real-time ingestion
@@ -69,7 +69,7 @@ Vector Store (ChromaDB — 6 collections)
 
 Each agent follows the same pattern:
 1. Fetch real data from the configured integration
-2. Pass to GPT-4o with a structured JSON prompt
+2. Pass to OSS 120B with a structured JSON prompt
 3. Validate output with Pydantic models
 4. **Fall back to deterministic demo data** if LLM or API call fails — the pipeline never crashes
 
@@ -80,7 +80,7 @@ Each agent follows the same pattern:
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Orchestration | LangGraph `StateGraph` | 0.2.76 |
-| LLM | OpenAI GPT-4o via LangChain | langchain 0.3.0 |
+| LLM | OSS 120B Chat GPT via LangChain | langchain 0.3.0 |
 | Backend | FastAPI + Uvicorn | 0.115.0 |
 | Vector Store | ChromaDB (persistent, ONNX embeddings) | 0.5.0 |
 | Frontend | React 18 + Vite | React 18.3, Vite 7 |
@@ -261,7 +261,7 @@ POST /api/intelligence/sync?project_key=SCRUM&github_repo=org/repo&teams_channel
 ```
 
 ### `POST /api/intelligence/ask`
-RAG Q&A — asks GPT-4o a question grounded in your project's vector store.
+RAG Q&A — asks OSS 120B a question grounded in your project's vector store.
 
 ```json
 { "question": "What are the main blockers this sprint?", "project_key": "SCRUM" }
