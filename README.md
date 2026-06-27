@@ -103,7 +103,11 @@ Jira-sick-park/
 │   │   └── components/
 │   │       ├── AgentGrid.jsx       # 5 animated agent cards with progress bars
 │   │       ├── AgentCard.jsx       # Individual agent — status, thought bubble
+│   │       ├── CircularAgentLoader.jsx # Loader animation
 │   │       ├── HealthScore.jsx     # Circular health gauge + evidence chips
+│   │       ├── OverviewPulse.jsx   # Top summary section
+│   │       ├── TabSummaryStrip.jsx # Sub-navigation tabs
+│   │       ├── StatusBar.jsx       # Global status ticker
 │   │       ├── SprintCard.jsx      # Donut chart — done/active/blocked/todo
 │   │       ├── RiskCard.jsx        # Severity-ranked risk rows
 │   │       ├── DependencyCard.jsx  # Blocking map + critical path
@@ -150,12 +154,12 @@ Jira-sick-park/
 │   │   ├── mcp_services_server.py  # MCP tool server
 │   │   └── utils/
 │   │       └── logger.py           # Structured JSON logging
+│   │   ├── demo_data/              # Demo data (JSON + MD files)
+│   │   │   ├── jira_issues.json
+│   │   │   ├── github_prs.json
+│   │   │   ├── teams_messages.json
+│   │   │   └── meeting_notes.md
 │   ├── requirements.txt
-│   └── data/                       # Demo data (JSON + MD files)
-│       ├── jira_issues.json
-│       ├── github_prs.json
-│       ├── teams_messages.json
-│       └── meeting_notes.md
 │
 ├── Messages/                       # Local Teams transcript fallback (.txt files)
 ├── .env.example
@@ -305,7 +309,7 @@ All webhook endpoints always return `200 Accepted` — processing errors are log
 | Decision | Rationale |
 |----------|-----------|
 | **LangGraph over CrewAI** | Explicit DAG control, deterministic ordering, conditional escalation node |
-| **Sequential workflow** | Agents share state — Risk Agent enriches its analysis using Sprint Agent output |
+| **Parallel Fan-out workflow** | Sprint, Risk, and Dependency agents run concurrently to minimize latency |
 | **Pydantic-enforced JSON** | Every agent returns structured, validated output — no hallucinated fields |
 | **Graceful degradation** | Every agent has a `try → LLM → deterministic fallback` pattern. The pipeline never crashes |
 | **Evidence-based health score** | Score derived from concrete metrics (completion %, risk counts, confidence). Not LLM opinion |
