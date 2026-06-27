@@ -1,4 +1,4 @@
-# 🦖 Jirassic Park — AI Project Manager Command Center
+# 🦖 Jira-ssic Park — AI Project Manager Command Center
 
 > *"Life, uh... finds a way" — and so do your project blockers.*
 
