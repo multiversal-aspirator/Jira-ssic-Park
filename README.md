@@ -32,21 +32,22 @@ FastAPI  (port 8000)
   ├── GET  /api/team/overview        → Team workload analysis
   └── POST /api/webhooks/{github,jira,teams}  → Real-time ingestion
 
-LangGraph Orchestrator (sequential DAG)
+LangGraph Orchestrator (Parallel Fan-out DAG)
   load_project_context
-        ↓
-  analyze_sprint   (SprintAgent  — Steggy 🦕)
-        ↓
-  detect_risks     (RiskAgent    — Rexford 🦖)
-        ↓
-  track_dependencies (DependencyAgent — Velocity 🦅)
-        ↓
-  forecast_delivery  (ForecastingAgent — Skyview 🦋)
-        ↓
-  generate_report  (ReportingAgent  — Alto 🦒)
-        ↓ (conditional — fires on HIGH/CRITICAL risk or OFF_TRACK sprint)
-  [escalation_node]
-        ↓
+           │
+     ┌─────┼─────┐
+     ▼     ▼     ▼
+  Sprint  Risk  Dependency
+     │     │     │
+     └─────┼─────┘
+           ▼
+        Forecast & 
+        Report
+           │
+           ▼
+    [escalation_node] (conditional)
+           │
+           ▼
   merge_results  → ProjectHealthReport (score 0–100)
 
 Vector Store (ChromaDB — 6 collections)
@@ -318,7 +319,6 @@ All webhook endpoints always return `200 Accepted` — processing errors are log
 ## ⚠️ Known Limitations
 
 - **Jira pagination capped at 100 issues** — projects with > 100 open issues will have incomplete sprint analysis (a paginator loop is a future TODO)
-- **LangGraph agents run sequentially** — the architecture diagram shows the intended dependency ordering; true async parallelism is not implemented in this LangGraph version
 - **No HMAC signature verification on webhooks** — GitHub/Jira webhooks are accepted without secret verification (TODO for production hardening)
 - **`get_vector_store()` singleton is not thread-safe** — concurrent requests could create two ChromaDB clients; safe under single-worker Uvicorn but needs an `asyncio.Lock` for multi-worker deployments
 - **Prompt injection not mitigated** in `/api/intelligence/ask` — user question is interpolated directly into the LLM prompt
