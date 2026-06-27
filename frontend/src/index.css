@@ -663,10 +663,54 @@ body::after {
 .stat-pill b { color: var(--jungle); }
 .stat-pill--done b { color: var(--amber); }
 
+.agent-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.workflow-stage-label {
+  width: fit-content;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(34, 139, 59, 0.08);
+  border: 1.5px solid var(--border);
+  color: var(--jungle-deep);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .agent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
   gap: 1.1rem;
+}
+
+.agent-grid--fanout {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.agent-grid--merge {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workflow-merge-line {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text-mid);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.workflow-merge-line span {
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(34, 139, 59, 0.35), transparent);
 }
 
 .btn-save:hover {
@@ -1426,7 +1470,10 @@ details summary { cursor: pointer; color: var(--text-mid); font-size: 0.85rem; m
   .app { padding: 1.2rem 1rem 3rem; }
   .site-header { flex-wrap: wrap; padding: 1.2rem 1.4rem; }
   .header-content h1 { font-size: 1.7rem; }
-  .agent-grid { grid-template-columns: 1fr; }
+  .agent-grid--fanout,
+  .agent-grid--merge {
+    grid-template-columns: 1fr;
+  }
   .team-section { grid-template-columns: 1fr; }
   .report-cols { grid-template-columns: 1fr; }
   .health-hero { flex-direction: column; text-align: center; }
