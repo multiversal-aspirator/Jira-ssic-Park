@@ -311,7 +311,7 @@ export default function App() {
       if (form.github_repo) params.github_repo = form.github_repo;
       if (form.teams_channel) params.teams_channel = form.teams_channel;
 
-      const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params });
+      const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params, timeout: 300000 });
       setSyncStatus(data);
 
       try {

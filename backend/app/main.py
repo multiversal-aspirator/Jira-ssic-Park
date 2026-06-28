@@ -3,6 +3,7 @@ load_dotenv()  # Load .env into os.environ (needed by langsmith SDK)
 
 import logging
 import sys
+import os
 
 # Configure root logger so ALL app logs print to terminal
 logging.basicConfig(
@@ -22,6 +23,17 @@ from app.api.team_routes import router as team_router
 from app.core.config import get_settings
 
 settings = get_settings()
+
+# Log environment configuration
+logger = logging.getLogger(__name__)
+logger.info(f"✓ APP_NAME: {settings.APP_NAME}")
+logger.info(f"✓ DEBUG: {settings.DEBUG}")
+logger.info(f"✓ LLM_PROVIDER: {settings.LLM_PROVIDER}")
+logger.info(f"✓ JIRA_URL: {settings.JIRA_URL if settings.JIRA_URL else '❌ NOT SET'}")
+logger.info(f"✓ JIRA_EMAIL: {settings.JIRA_EMAIL if settings.JIRA_EMAIL else '❌ NOT SET'}")
+logger.info(f"✓ JIRA_API_TOKEN: {'✓ SET' if settings.JIRA_API_TOKEN else '❌ NOT SET'}")
+logger.info(f"✓ GITHUB_TOKEN: {'✓ SET' if settings.GITHUB_TOKEN else '❌ NOT SET'}")
+logger.info(f"✓ LANGSMITH_TRACING: {settings.LANGSMITH_TRACING}")
 
 app = FastAPI(
     title=settings.APP_NAME,

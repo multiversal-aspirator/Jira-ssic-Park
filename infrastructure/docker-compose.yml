@@ -6,17 +6,24 @@ services:
     container_name: jira-sick-park-backend
     ports:
       - "8000:8000"
-    env_file:
-      - ../.env
     restart: unless-stopped
     networks:
       - app-network
+    volumes:
+      # Mount vector database for persistence
+      - ../vector_db:/app/vector_db
+      # Mount Messages folder for Teams message processing
+      - ../Messages:/Messages:ro
+      # Mount .env file for environment variables
+      - ../.env:/app/.env:ro
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8000/api/project/health"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
+    labels:
+      - "com.jirassicpark.description=FastAPI backend service"
 
   frontend:
     build:
@@ -33,6 +40,13 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    labels:
+      - "com.jirassicpark.description=React frontend with Nginx"
+
+volumes:
+  # Named volumes for persistence
+  vector_db:
+    driver: local
 
 networks:
   app-network:

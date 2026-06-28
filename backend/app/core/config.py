@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -32,7 +33,16 @@ class Settings(BaseSettings):
     LANGSMITH_API_KEY: str = ""
     LANGSMITH_PROJECT: str = "ai-project-manager"
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
+    model_config = {
+        "env_file": ".env",
+        "extra": "ignore",
+        "case_sensitive": False,
+    }
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
 
 
 @lru_cache()
