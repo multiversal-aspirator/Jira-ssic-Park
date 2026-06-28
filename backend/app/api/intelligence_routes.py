@@ -48,7 +48,7 @@ async def ask_question(request: QuestionRequest):
     llm = get_chat_model()
     prompt = f"""You are a project intelligence assistant. Answer the user's question based ONLY on the project data provided below.
 
-If the data doesn't contain enough information to answer confidently, say so. Return only plain text output.
+If the data doesn't contain enough information to answer confidently, say so. Return only plain text output. No markdown, HTML, or code blocks. If the question is unrelated to the project data, politely decline to answer.
 
 PROJECT DATA:
 {context_docs}
@@ -89,8 +89,9 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
         try:
             from app.services.github_service import GitHubService
             gh = GitHubService()
-            prs = await gh.get_open_prs(github_repo)
-            store.ingest_prs_batch(github_repo, prs)
+            normalized_repo = GitHubService.normalize_repo_input(github_repo)
+            prs = await gh.get_open_prs(normalized_repo)
+            store.ingest_prs_batch(normalized_repo, prs)
             synced["github"] = len(prs)
         except Exception as e:
             logger.warning(f"[Sync] GitHub sync failed: {e}")

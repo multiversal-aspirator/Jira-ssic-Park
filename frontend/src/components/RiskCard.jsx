@@ -13,7 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 
-const SEV_COLOR = { critical: '#e5564b', high: '#f59e0b', medium: '#e0a52a', low: '#34d27b' };
+const SEV_COLOR = { critical: '#e5564b', high: '#f59e0b', medium: '#ffff00e6', low: '#34d27b' };
 
 export default function RiskCard({ data }) {
   if (!data) return null;

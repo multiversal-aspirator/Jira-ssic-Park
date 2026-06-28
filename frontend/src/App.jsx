@@ -10,7 +10,8 @@ import TeamCard from './components/TeamCard';
 import SearchPanel from './components/SearchPanel';
 import ProjectManager from './components/ProjectManager';
 import AgentGrid from './components/AgentGrid';
-import DinoIcon from './components/DinoIcon';
+import headerLogo from './components/Logo.png';
+import { Kpi } from './components/Visuals';
 import OverviewPulse from './components/OverviewPulse';
 import TabSummaryStrip from './components/TabSummaryStrip';
 
@@ -356,6 +357,7 @@ export default function App() {
 
   const TABS = [
     { key: 'overview', label: 'Overview' },
+    { key: 'agents', label: 'Agents' },
     { key: 'sprint', label: 'Sprint' },
     { key: 'risks', label: 'Risks' },
     { key: 'dependencies', label: 'Dependencies' },
@@ -368,7 +370,9 @@ export default function App() {
     <div className="app">
       <header className="site-header">
         <span className="gate-vine" />
-        <span className="header-dino"><DinoIcon species="trex" accent="#34c759" /></span>
+        <span className="header-dino">
+          <img className="header-dino__logo" src={headerLogo} alt="Jira-ssic Park logo" />
+        </span>
         <div className="header-content">
           <h1>Jira-ssic Park</h1>
           <p>AI Project Manager Command Center</p>
@@ -506,7 +510,7 @@ export default function App() {
       {loading && (
         <div className="loading-hint">
           <p>The pack is following the workflow — sprint signals first, then risks, dependencies, forecast, and final report…</p>
-          <div className="footprints"><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span></div>
+          <div className="footprints"><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span></div>
         </div>
       )}
 
@@ -529,12 +533,28 @@ export default function App() {
           <AgentGrid agents={agents} />
           {report && (
             <>
-              <HealthScore score={report.health_score} />
+              <HealthScore score={report.health_score} evidence={report.evidence_summary} />
               <OverviewPulse report={report} />
+              <div className="summary-strip">
+                {report.sprint_analysis && (
+                  <Kpi value={`${Math.round(report.sprint_analysis.completion_percentage || 0)}%`} label="Sprint Done" color="#2e7d32" icon="🦕" />
+                )}
+                {report.risk_analysis && (
+                  <Kpi value={report.risk_analysis.risks?.length || 0} label="Active Risks" color="#e65100" icon="⚠️" />
+                )}
+                {report.dependency_analysis && (
+                  <Kpi value={report.dependency_analysis.dependencies?.length || 0} label="Dependencies" color="#1565c0" icon="🔗" />
+                )}
+                {report.delivery_forecast && (
+                  <Kpi value={`${Math.round((report.delivery_forecast.confidence_score || 0) * 100)}%`} label="Forecast" color="#7b1fa2" icon="🔭" />
+                )}
+              </div>
             </>
           )}
         </>
       )}
+
+      {tab === 'agents' && <AgentGrid agents={agents} />}
 
       {tab === 'sprint' && (
         report?.sprint_analysis
