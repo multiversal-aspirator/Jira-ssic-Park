@@ -37,7 +37,7 @@ class SprintAnalysis(BaseModel):
     total_issues: int
     completed: int
     in_progress: int
-    blocked: int
+    in_review: int
     completion_percentage: float
     velocity: float
     status: SprintStatus

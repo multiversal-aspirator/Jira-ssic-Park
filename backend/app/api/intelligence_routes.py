@@ -32,7 +32,7 @@ async def ask_question(request: QuestionRequest):
     if request.project_key:
         query = f"{request.project_key}: {request.question}"
 
-    results = store.search(query, n_results=50)
+    results = store.search(query, n_results=100)
 
     if not results:
         return QuestionResponse(
@@ -101,7 +101,7 @@ async def manual_sync(project_key: str, github_repo: str | None = None, teams_ch
         from app.services.teams_service import TeamsService
         teams = TeamsService()
         channel = teams_channel or "local"
-        messages = await teams.get_channel_messages(channel, limit=100)
+        messages = await teams.get_channel_messages(channel, limit=50)
         store.ingest_teams_messages_batch(channel, messages)
         synced["teams"] = len(messages)
 

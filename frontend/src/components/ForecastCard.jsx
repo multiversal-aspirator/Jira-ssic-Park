@@ -14,9 +14,9 @@ export default function ForecastCard({ data }) {
   if (!data) return null;
 
   const likeMeta = {
-    high: { color: '#34d27b', tone: 'good' },
-    medium: { color: '#e0a52a', tone: 'amber' },
-    low: { color: '#e5564b', tone: 'danger' },
+    high: { color: '#e82009', tone: 'good' },
+    medium: { color: '#f0f32a', tone: 'amber' },
+    low: { color: '#50e54b', tone: 'danger' },
   };
   const meta = likeMeta[data.completion_likelihood] || { color: '#9cc2ab', tone: 'neutral' };
   const pct = Math.round((data.confidence_score || 0) * 100);

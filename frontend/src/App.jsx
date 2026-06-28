@@ -357,7 +357,6 @@ export default function App() {
 
   const TABS = [
     { key: 'overview', label: 'Overview' },
-    { key: 'agents', label: 'Agents' },
     { key: 'sprint', label: 'Sprint' },
     { key: 'risks', label: 'Risks' },
     { key: 'dependencies', label: 'Dependencies' },
@@ -553,8 +552,6 @@ export default function App() {
           )}
         </>
       )}
-
-      {tab === 'agents' && <AgentGrid agents={agents} />}
 
       {tab === 'sprint' && (
         report?.sprint_analysis

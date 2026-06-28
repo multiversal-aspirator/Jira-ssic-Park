@@ -13,14 +13,14 @@ export default function SprintCard({ data, jiraUrl }) {
 
   const completed = data.completed || 0;
   const inProgress = data.in_progress || 0;
-  const blocked = data.blocked || 0;
+  const inReview = data.in_review || 0;
   const total = data.total_issues || 0;
-  const todo = Math.max(0, total - completed - inProgress - blocked);
+  const todo = Math.max(0, total - completed - inProgress - inReview);
 
   const segments = [
     { value: completed, color: '#2e7d32' },
     { value: inProgress, color: '#1976d2' },
-    { value: blocked, color: '#d32f2f' },
+    { value: inReview, color: '#d32f2f' },
     { value: todo, color: '#e0e0e0' },
   ];
 
@@ -43,19 +43,41 @@ export default function SprintCard({ data, jiraUrl }) {
         <div className="card-visual__meta">
           <div className="stat-line"><span>Sprint</span><span>{data.sprint_name || '—'}</span></div>
           <div className="stat-line"><span>Velocity</span><span>{data.velocity ?? '—'}</span></div>
-          <div className="legend">
-            <span className="legend-item"><span className="legend-dot" style={{ background: '#2e7d32' }} />Done {completed}</span>
-            <span className="legend-item"><span className="legend-dot" style={{ background: '#1976d2' }} />Active {inProgress}</span>
-            <span className="legend-item"><span className="legend-dot" style={{ background: '#d32f2f' }} />Blocked {blocked}</span>
-            <span className="legend-item"><span className="legend-dot" style={{ background: '#e0e0e0' }} />To do {todo}</span>
-          </div>
+          
         </div>
       </div>
 
       <div className="kpi-row">
-        <Kpi value={total} label="Issues" color="#f3a807" />
+        <div
+          onClick={() => window.open("https://hackathon-gep.atlassian.net/jira/software/projects/SCRUM/boards/1", "_blank")}
+          style={{ cursor: "pointer" }}
+        >
+          <Kpi value={total} label="Tickets" color="#f3a807" />
+        </div>
+        <div
+          onClick={() => window.open("https://hackathon-gep.atlassian.net/jira/software/projects/SCRUM/boards/1?jql=status%20%3D%20Done", "_blank")}
+          style={{ cursor: "pointer" }}
+        >
         <Kpi value={completed} label="Completed" color="#2e7d32" />
-        <Kpi value={blocked} label="Blocked" color="#d32f2f" />
+        </div>
+         <div
+          onClick={() => window.open("https://hackathon-gep.atlassian.net/jira/software/projects/SCRUM/boards/1?jql=status%20%3D%20%22In%20Progress%22", "_blank")}
+          style={{ cursor: "pointer" }}
+        >
+        <Kpi value={inProgress} label="In Progress" color="#df0a98" />
+        </div>
+        <div
+          onClick={() => window.open("https://hackathon-gep.atlassian.net/jira/software/projects/SCRUM/boards/1?jql=status%20%3D%20%22In%20Review%22", "_blank")}
+          style={{ cursor: "pointer" }}
+        >
+        <Kpi value={inReview} label="In Review" color="#2fb5d3" />
+        </div>
+        <div
+          onClick={() => window.open("https://hackathon-gep.atlassian.net/jira/software/projects/SCRUM/boards/1?jql=status%20%3D%20%22To%20Do%22", "_blank")}
+          style={{ cursor: "pointer" }}
+        >
+        <Kpi value={todo} label="To Do" color="#2b13a5" />
+        </div>
       </div>
 
       {jiraUrl && (

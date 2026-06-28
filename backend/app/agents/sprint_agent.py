@@ -25,7 +25,7 @@ Respond ONLY with valid JSON matching this schema:
   "total_issues": int,
   "completed": int,
   "in_progress": int,
-  "blocked": int,
+  "in_review": int,
   "completion_percentage": float,
   "velocity": float,
   "status": "on_track" | "at_risk" | "off_track",
@@ -38,14 +38,10 @@ Respond ONLY with valid JSON matching this schema:
 DONE_STATUSES = {"done", "closed", "resolved", "complete", "completed"}
 IN_PROGRESS_STATUSES = {
     "in progress",
-    "in review",
-    "review",
-    "code review",
     "qa",
     "testing",
     "development",
 }
-BLOCKED_STATUSES = {"blocked", "impediment"}
 
 
 def _status_name(issue: dict) -> str:
@@ -61,9 +57,9 @@ def _is_in_progress(issue: dict) -> bool:
     return status in IN_PROGRESS_STATUSES
 
 
-def _is_blocked(issue: dict) -> bool:
+def _is_in_review(issue: dict) -> bool:
     status = _status_name(issue).lower()
-    return bool(issue.get("is_blocked")) or status in BLOCKED_STATUSES or "block" in status
+    return status == "in review"
 
 
 def _story_points(issue: dict) -> float:
@@ -84,7 +80,7 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
     total = len(issues)
 
     completed = sum(1 for issue in issues if _is_completed(issue))
-    blocked = sum(1 for issue in issues if _is_blocked(issue))
+    in_review = sum(1 for issue in issues if _is_in_review(issue))
     in_progress = sum(1 for issue in issues if _is_in_progress(issue))
 
     completion_pct = (completed / total * 100) if total else 0.0
@@ -94,8 +90,6 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
 
     if total == 0:
         status = SprintStatus.OFF_TRACK
-    elif blocked > 0 and completion_pct < 70:
-        status = SprintStatus.AT_RISK
     elif completion_pct >= 70:
         status = SprintStatus.ON_TRACK
     elif completion_pct >= 40:
@@ -113,13 +107,13 @@ def _build_sprint_analysis_from_data(sprint_data: dict, source: str = "unknown")
         total_issues=total,
         completed=completed,
         in_progress=in_progress,
-        blocked=blocked,
+        in_review=in_review,
         completion_percentage=round(completion_pct, 2),
         velocity=float(completed_points),
         status=status,
         summary=(
             f"Sprint analysis from {source}: {completed}/{total} issues completed "
-            f"({completion_pct:.0f}%). {blocked} blocked, {in_progress} in progress. "
+            f"({completion_pct:.0f}%). {in_review} in review, {in_progress} in progress. "
             f"Velocity: {completed_points:g}/{total_points:g} story points completed."
         ),
     )

@@ -37,7 +37,6 @@ export default function TabSummaryStrip({ tab, report, teamData }) {
     <details className="tab-summary" open>
       <summary>
         <span>Quick Pulse</span>
-        <span className="tab-summary__hint">tap to collapse</span>
       </summary>
       <p>{dynamic[tab] || FALLBACK[tab]}</p>
     </details>
