@@ -10,7 +10,7 @@ import TeamCard from './components/TeamCard';
 import SearchPanel from './components/SearchPanel';
 import ProjectManager from './components/ProjectManager';
 import AgentGrid from './components/AgentGrid';
-import DinoIcon from './components/DinoIcon';
+import headerLogo from './components/Logo.png';
 import { Kpi } from './components/Visuals';
 import OverviewPulse from './components/OverviewPulse';
 import TabSummaryStrip from './components/TabSummaryStrip';
@@ -311,7 +311,7 @@ export default function App() {
       if (form.github_repo) params.github_repo = form.github_repo;
       if (form.teams_channel) params.teams_channel = form.teams_channel;
 
-      const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params });
+      const { data } = await axios.post(`${API_BASE}/intelligence/sync`, null, { params, timeout: 300000 });
       setSyncStatus(data);
 
       try {
@@ -370,7 +370,9 @@ export default function App() {
     <div className="app">
       <header className="site-header">
         <span className="gate-vine" />
-        <span className="header-dino"><DinoIcon species="trex" accent="#34c759" /></span>
+        <span className="header-dino">
+          <img className="header-dino__logo" src={headerLogo} alt="Jira-ssic Park logo" />
+        </span>
         <div className="header-content">
           <h1>Jira-ssic Park</h1>
           <p>AI Project Manager Command Center</p>
@@ -508,7 +510,7 @@ export default function App() {
       {loading && (
         <div className="loading-hint">
           <p>The pack is following the workflow — sprint signals first, then risks, dependencies, forecast, and final report…</p>
-          <div className="footprints"><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span><span>🦶</span></div>
+          <div className="footprints"><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span></div>
         </div>
       )}
 
